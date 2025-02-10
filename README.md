@@ -1,7 +1,5 @@
 # Facial_Recognition
 
-![Facial Recognition Banner](https://via.placeholder.com/800x200.png?text=Automatic+Face+Attendance+System)
-
 A Python-based automatic attendance system using facial recognition.
 
 ---
@@ -72,5 +70,4 @@ This project is licensed under the GNU General Public License v3.0. See the `LIC
 
 > **Note:** This project requires a compatible webcam for real-time facial recognition and attendance marking.
 
-![Thank You](https://via.placeholder.com/600x100.png?text=Thank+You+for+Using+Facial+Recognition+Attendance+System)
 
