@@ -286,14 +286,19 @@ class UserLoginWindow(ctk.CTk):
 
         self.frame_buttons = ctk.CTkFrame(self)
         self.frame_buttons.pack(pady=10, padx=40, fill="x")
+        # Cấu hình 3 cột cho 3 nút: Login, Back, và Attendance (Điểm danh)
         self.frame_buttons.grid_columnconfigure(0, weight=1)
         self.frame_buttons.grid_columnconfigure(1, weight=1)
+        self.frame_buttons.grid_columnconfigure(2, weight=1)
         self.button_login = ctk.CTkButton(self.frame_buttons, text=self.trans["login"], command=self.handle_user_login,
                                           width=200, height=40)
         self.button_login.grid(row=0, column=0, padx=20, pady=10)
         self.button_back = ctk.CTkButton(self.frame_buttons, text=self.trans["back"], command=self.go_back, width=200,
                                          height=40)
         self.button_back.grid(row=0, column=1, padx=20, pady=10)
+        self.button_attendance = ctk.CTkButton(self.frame_buttons, text=self.trans["attendance"], command=self.open_attendance,
+                                               width=200, height=40)
+        self.button_attendance.grid(row=0, column=2, padx=20, pady=10)
 
     def create_theme_toggle(self):
         self.toggle_button = ctk.CTkButton(self, text=self.trans["toggle_dark"], width=40, height=40, corner_radius=8,
@@ -331,6 +336,18 @@ class UserLoginWindow(ctk.CTk):
         self.destroy()
         from control_panel import open_control_panel  # Cập nhật import từ thư mục control_panel
         open_control_panel(user_info, self.cnx, self.cursor, self.language)
+
+    def open_attendance(self):
+        """
+        Hàm này sẽ gọi module FacialRecognition để thực hiện nhận diện khuôn mặt (điểm danh).
+        Sau khi gọi, cửa sổ đăng nhập người dùng sẽ được đóng.
+        """
+        try:
+            from FacialRecognition import main as run_attendance
+            self.destroy()  # Đóng cửa sổ đăng nhập người dùng
+            run_attendance(self.cnx, self.cursor)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể mở chức năng điểm danh:\n{e}")
 
     def go_back(self):
         self.destroy()
