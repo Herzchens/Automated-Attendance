@@ -52,7 +52,7 @@ Haven't supported yet
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
 
-Repository: [Herzchens/Facial_Recognition](https://github.com/Herzchens/Facial_Recognition)
+Repository: [Herzchens/Automated-Attendance](https://github.com/Herzchens/Automated-Attendance)
 
 ---
 
