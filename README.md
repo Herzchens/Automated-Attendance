@@ -15,7 +15,7 @@ A Python-based automatic attendance system using facial recognition.
 ---
 
 ## Introduction
-`Facial_Recognition` is an automatic attendance system that leverages facial recognition technology to mark attendance. It can detect and recognize faces in real-time or from images and videos, making it ideal for schools, offices, and other organizations.
+This is an automatic attendance system that leverages facial recognition technology to mark attendance. It can detect and recognize faces in real-time or from images and videos, making it ideal for schools, offices, and other organizations.
 
 ---
 
