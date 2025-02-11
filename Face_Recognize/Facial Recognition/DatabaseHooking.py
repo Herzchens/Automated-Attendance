@@ -1,23 +1,22 @@
-# DatabaseHooking.py
 import mysql.connector
 from mysql.connector import Error
 from datetime import datetime
 
-
 def connect_db(user, password, host, database="Facial_Recognition"):
     """
     Kết nối đến MySQL, tạo database nếu chưa tồn tại và chuyển sang sử dụng database đó.
+    Sử dụng cursor buffered để tránh lỗi "Commands out of sync".
     """
     try:
         cnx = mysql.connector.connect(user=user, password=password, host=host)
-        cursor = cnx.cursor()
+        # Sử dụng buffered cursor
+        cursor = cnx.cursor(buffered=True)
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
         cnx.database = database
         return cnx, cursor
     except Error as e:
         print(f"Error connecting to database: {e}")
         return None, None
-
 
 def create_tables(cursor):
     """
@@ -49,7 +48,6 @@ def create_tables(cursor):
     """
     cursor.execute(create_users_table)
 
-
 def create_default_users(cursor, cnx):
     """
     Tạo 4 tài khoản mặc định nếu bảng Users rỗng:
@@ -72,7 +70,6 @@ def create_default_users(cursor, cnx):
             cursor.execute(sql, user)
         cnx.commit()
 
-
 # ---------- Các thao tác với bảng Students ----------
 
 def add_student(cursor, cnx, HoVaTen, Lop, ImagePath):
@@ -83,14 +80,12 @@ def add_student(cursor, cnx, HoVaTen, Lop, ImagePath):
     cursor.execute(sql, (HoVaTen, Lop, ImagePath))
     cnx.commit()
 
-
 def get_all_students(cursor):
     """
     Lấy danh sách tất cả học sinh.
     """
     cursor.execute("SELECT id, HoVaTen, Lop, ImagePath, DiemDanhStatus, ThoiGianDiemDanh FROM Students")
     return cursor.fetchall()
-
 
 def get_students_by_class(cursor, class_name):
     """
@@ -100,7 +95,6 @@ def get_students_by_class(cursor, class_name):
     cursor.execute(sql, (class_name,))
     return cursor.fetchall()
 
-
 def update_attendance(cursor, cnx, student_id, status, time):
     """
     Cập nhật trạng thái điểm danh của học sinh.
@@ -109,7 +103,6 @@ def update_attendance(cursor, cnx, student_id, status, time):
     cursor.execute(sql, (status, time, student_id))
     cnx.commit()
 
-
 def remove_student(cursor, cnx, student_id):
     """
     Xoá học sinh khỏi bảng.
@@ -117,7 +110,6 @@ def remove_student(cursor, cnx, student_id):
     sql = "DELETE FROM Students WHERE id=%s"
     cursor.execute(sql, (student_id,))
     cnx.commit()
-
 
 def update_student(cursor, cnx, student_id, HoVaTen=None, Lop=None, ImagePath=None):
     """
@@ -140,7 +132,6 @@ def update_student(cursor, cnx, student_id, HoVaTen=None, Lop=None, ImagePath=No
         cursor.execute(sql, tuple(params))
         cnx.commit()
 
-
 # ---------- Các thao tác với bảng Users ----------
 
 def add_user(cursor, cnx, username, password, role="user"):
@@ -151,7 +142,6 @@ def add_user(cursor, cnx, username, password, role="user"):
     cursor.execute(sql, (username, password, role))
     cnx.commit()
 
-
 def verify_user(cursor, username, password):
     """
     Kiểm tra đăng nhập, trả về thông tin người dùng nếu đúng.
@@ -159,7 +149,6 @@ def verify_user(cursor, username, password):
     sql = "SELECT id, username, role FROM Users WHERE username=%s AND password=%s"
     cursor.execute(sql, (username, password))
     return cursor.fetchone()
-
 
 def get_all_users(cursor):
     """
