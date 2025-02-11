@@ -19,7 +19,7 @@ A Python-based automatic attendance system using facial recognition.
 
 ---
 
-## Features
+## Features (pending)
 ✨ Automatic attendance marking using facial recognition  
 ✨ Real-time facial detection from webcam feed  
 ✨ Image and video file face recognition  
@@ -32,16 +32,11 @@ A Python-based automatic attendance system using facial recognition.
 ### Real-time Attendance Marking
 Run the main script to start real-time facial recognition and automatic attendance marking:
 ```bash
-python main.py
-```
-
-### Attendance from Image Files
-```bash
-python recognize_image.py --image path/to/image.jpg
+python GUI.py
 ```
 
 ### Configuration
-Modify `config.py` to customize settings (e.g., input source, recognition model, attendance data storage, etc.).
+Haven't supported yet
 
 ---
 
@@ -57,7 +52,7 @@ Modify `config.py` to customize settings (e.g., input source, recognition model,
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
 
-Repository: [Herzchen/Facial_Recognition](https://github.com/Herzchen/Facial_Recognition)
+Repository: [Herzchens/Facial_Recognition](https://github.com/Herzchens/Facial_Recognition)
 
 ---
 
