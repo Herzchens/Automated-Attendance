@@ -1,4 +1,4 @@
-# Facial_Recognition
+# Automated-Attendance
 
 A Python-based automatic attendance system using facial recognition.
 
