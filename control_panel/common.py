@@ -1,4 +1,3 @@
-# control_panel/common.py
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog, filedialog
 import csv

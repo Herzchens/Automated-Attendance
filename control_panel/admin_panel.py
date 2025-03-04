@@ -1,4 +1,3 @@
-# admin_panel.py
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog
 import sys, os, datetime

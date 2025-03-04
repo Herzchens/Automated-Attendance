@@ -1,14 +1,11 @@
-# control_panel/__init__.py
 from .admin_panel import AdminControlPanel
 from .moderator_panel import ModeratorControlPanel
 from .user_panel import UserControlPanel
 from .superuser_panel import SuperUserControlPanel
 from .common import translations, CustomTable
-from tkinter import messagebox
-import sys
 
 def open_user_login_window(cnx, cursor, language):
-    from GUI import UserLoginWindow  # Giả sử bạn có file GUI.py chứa UserLoginWindow
+    from GUI import UserLoginWindow
     win = UserLoginWindow(cnx, cursor, language)
     try:
         win.state("zoomed")

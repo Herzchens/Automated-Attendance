@@ -1,12 +1,9 @@
-# PanelOperations.py
 import csv
 from datetime import datetime
-import customtkinter as ctk
 from tkinter import messagebox, simpledialog, filedialog
 from DatabaseHooking import add_student, update_student, remove_student
 from .common import AddStudentImageWindow
 
-# Biến toàn cục để lưu thời gian hạn chót (kiểu time)
 CUTOFF_TIME = None
 
 def set_cutoff_time(language):
@@ -74,14 +71,13 @@ def calculate_attendance_status(attendance_time, language):
 def add_student_ui(parent, cnx, cursor, language, on_success_callback=None):
     """
     Mở cửa sổ thêm học sinh từ ảnh.
-    Nếu đã có cửa sổ AddStudentImageWindow trong common, ta chỉ gọi nó.
     """
     AddStudentImageWindow(parent, cnx, cursor, language, on_success_callback=on_success_callback)
 
 def edit_student_ui(parent, cnx, cursor, language, student, on_success_callback=None):
     """
     Hiển thị hộp thoại cho phép chỉnh sửa thông tin học sinh.
-    student: tuple chứa thông tin học sinh (id, HoVaTen, Lop, ...)
+    student: chứa thông tin học sinh (id, HoVaTen, Lop, ...)
     """
     new_name = simpledialog.askstring(
         "Edit Student",
@@ -129,14 +125,7 @@ def remove_student_ui(parent, cnx, cursor, language, student, on_success_callbac
             messagebox.showerror("Error", f"Error deleting student:\n{e}")
 
 def search_student_ui(cursor, language, search_term, query_template, params):
-    """
-    Hàm tìm kiếm chung:
-      - cursor: con trỏ database.
-      - search_term: từ khóa tìm kiếm.
-      - query_template: câu truy vấn có placeholder.
-      - params: tuple chứa các tham số cho câu truy vấn.
-    Trả về danh sách các hàng kết quả tìm kiếm.
-    """
+
     if not search_term:
         return None
     try:

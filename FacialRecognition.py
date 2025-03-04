@@ -9,7 +9,6 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 
 from DatabaseHooking import get_all_students, update_attendance
 
-# Đặt device là CPU, vì GPU của bạn yếu
 device = torch.device("cpu")
 
 # Khởi tạo mô hình phát hiện khuôn mặt MTCNN chạy trên CPU

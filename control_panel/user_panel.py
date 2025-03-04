@@ -1,4 +1,3 @@
-# user_panel.py
 import customtkinter as ctk
 from tkinter import messagebox
 import sys, datetime
@@ -70,7 +69,6 @@ class UserControlPanel(ctk.CTk):
             self.toggle_button.configure(text=self.trans["toggle_dark"])
 
     def fetch_data(self):
-        # Ví dụ: user panel được gán lớp cố định "12S"
         assigned_class = "12S"
         query = "SELECT id, HoVaTen, DiemDanhStatus, ThoiGianDiemDanh FROM Students WHERE Lop = %s ORDER BY id"
         try:

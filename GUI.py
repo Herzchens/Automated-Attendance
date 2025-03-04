@@ -1,10 +1,7 @@
 import customtkinter as ctk
 import sys, json, os, base64
 from tkinter import messagebox
-
-# Import các hàm từ DatabaseHooking
 from DatabaseHooking import connect_db, create_tables, verify_user, create_default_users
-from control_panel import open_control_panel
 
 # --- Hàm load và save cấu hình ---
 def load_config():
@@ -118,7 +115,6 @@ translations = {
     }
 }
 
-# Map tên camera giữa 2 ngôn ngữ (có thể tuỳ biến)
 mapping_vi_to_en = {
     "Webcam mặc định": "Default Webcam",
     "Camera IP LAN": "LAN IP Camera",

@@ -1,8 +1,6 @@
-# superuser_panel.py
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog
 import sys, datetime
-from DatabaseHooking import remove_student, update_student
 from .common import translations, CustomTable
 from .PanelOperations import (
     add_student_ui,
@@ -50,7 +48,6 @@ class SuperUserControlPanel(ctk.CTk):
         self.accounts_table.pack(fill="both", expand=True)
         self.accounts_toolbar = ctk.CTkFrame(accounts_frame)
         self.accounts_toolbar.pack(pady=5)
-        # Các nút thao tác tài khoản (edit, delete) nếu cần
 
         # Tab quản lý học sinh
         students_frame = self.tabview.tab(self.trans["students_tab"])
@@ -153,7 +150,6 @@ class SuperUserControlPanel(ctk.CTk):
             messagebox.showerror("Error", f"Error fetching student data:\n{e}")
             return
         # Cập nhật bảng hiển thị
-        # (Giả sử bạn có một bảng hiển thị trong tab hoặc ngoài tab, tương tự như admin panel)
         if hasattr(self, "students_table"):
             self.students_table.clear_rows()
             if not rows:
@@ -172,7 +168,7 @@ class SuperUserControlPanel(ctk.CTk):
                         attendance = '✖'
                     self.students_table.add_row((idx, row[1], attendance))
         else:
-            # Nếu không có bảng riêng, bạn có thể hiển thị lại theo cách khác
+            # Chưa Tạo
             pass
 
     def get_selected_student(self):
