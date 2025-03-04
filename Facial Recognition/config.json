@@ -1,10 +1,10 @@
 {
     "theme": "Dark",
-    "language": "English",
+    "language": "Tiếng Việt",
     "db_host": "",
     "db_username": "cm9vdA==",
     "db_password": "SGVyemNoZW4=",
-    "camera_type": "Default Webcam",
+    "camera_type": "Webcam mặc định",
     "camera_url": "",
     "camera_types": [
         "Webcam mặc định",

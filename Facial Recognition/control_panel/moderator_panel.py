@@ -1,4 +1,3 @@
-# moderator_panel.py
 import customtkinter as ctk
 from tkinter import messagebox
 import sys, datetime

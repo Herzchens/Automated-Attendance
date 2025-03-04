@@ -1,12 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
-from datetime import datetime
 
 def connect_db(user, password, host, database="Facial_Recognition"):
-    """
-    Kết nối đến MySQL, tạo database nếu chưa tồn tại và chuyển sang sử dụng database đó.
-    Sử dụng cursor buffered để tránh lỗi "Commands out of sync".
-    """
     try:
         cnx = mysql.connector.connect(user=user, password=password, host=host)
         # Sử dụng buffered cursor
@@ -19,11 +14,6 @@ def connect_db(user, password, host, database="Facial_Recognition"):
         return None, None
 
 def create_tables(cursor):
-    """
-    Tạo bảng Students và Users nếu chưa tồn tại.
-    - Bảng Students chứa: Họ và tên, lớp, đường dẫn ảnh, trạng thái điểm danh, thời gian điểm danh.
-    - Bảng Users chứa: username, password và role (superuser, admin, moderator, user)
-    """
     # Tạo bảng Students
     create_students_table = """
     CREATE TABLE IF NOT EXISTS Students (
@@ -50,7 +40,7 @@ def create_tables(cursor):
 
 def create_default_users(cursor, cnx):
     """
-    Tạo 4 tài khoản mặc định nếu bảng Users rỗng:
+     4 tài khoản mặc định nếu bảng Users rỗng:
       - superuser: username: superuser, password: superpass, role: superuser
       - admin: username: admin, password: adminpass, role: admin
       - moderator: username: moderator, password: modpass, role: moderator
