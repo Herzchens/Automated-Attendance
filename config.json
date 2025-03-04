@@ -1,0 +1,14 @@
+{
+    "theme": "Dark",
+    "language": "English",
+    "db_host": "",
+    "db_username": "cm9vdA==",
+    "db_password": "SGVyemNoZW4=",
+    "camera_type": "Default Webcam",
+    "camera_url": "",
+    "camera_types": [
+        "Webcam mặc định",
+        "Camera IP LAN",
+        "Camera WiFi"
+    ]
+}
