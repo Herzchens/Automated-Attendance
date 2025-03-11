@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Guide for Facial Recognition Software</title>
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      padding-bottom: 80px;
+    }
+    header {
+      background: #007BFF;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    nav {
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    nav ul {
+      display: flex;
+      justify-content: center;
+      list-style: none;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #007BFF;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+    nav ul li a:hover {
+      color: #0056b3;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    h2 {
+      margin-bottom: 15px;
+      color: #007BFF;
+    }
+    h3 {
+      margin-top: 15px;
+      color: #0056b3;
+    }
+    ol, ul {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #007BFF;
+      color: #fff;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>User Guide for Facial Recognition Software</h1>
+  </header>
+  <nav>
+    <ul>
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#setup">Setup & Database Login</a></li>
+      <li><a href="#camera-connection">Camera Connection</a></li>
+      <li><a href="#control-panel">Control Panel</a></li>
+      <li><a href="#features">Role-Based Features</a></li>
+      <li><a href="#detailed-instructions">Detailed Instructions</a></li>
+    </ul>
+  </nav>
+  <main>
+    <!-- Introduction -->
+    <section id="introduction" class="fade-in-section">
+      <h2>Introduction</h2>
+      <p>
+        This facial recognition software is designed to manage student attendance through facial recognition technology. The system integrates with a MySQL database and supports multiple camera connections including default webcams, IP LAN cameras, and WiFi cameras.
+      </p>
+    </section>
+
+    <!-- Setup & Database Login -->
+    <section id="setup" class="fade-in-section">
+      <h2>Setup & Database Login</h2>
+      <p>
+        <strong>Step 1:</strong> Ensure that the software and MySQL are installed on your system. On the first run, if the database does not exist, the system will automatically create the necessary database and tables.
+      </p>
+      <p>
+        <strong>Step 2:</strong> Enter your MySQL login credentials:
+      </p>
+      <ul>
+        <li>Host</li>
+        <li>Username</li>
+        <li>Password</li>
+      </ul>
+      <p>
+        After a successful login, if the <em>Users</em> table is empty, the system will automatically create default accounts:
+      </p>
+      <ul>
+        <li>SuperUser: <strong>superuser / superpass</strong></li>
+        <li>Admin: <strong>admin / adminpass</strong></li>
+        <li>Moderator: <strong>moderator / modpass</strong></li>
+        <li>User: <strong>user / userpass</strong></li>
+      </ul>
+    </section>
+
+    <!-- Camera Connection -->
+    <section id="camera-connection" class="fade-in-section">
+      <h2>Camera Connection</h2>
+      <p>
+        The software supports connecting to various camera types:
+      </p>
+      <ul>
+        <li><strong>Default Webcam:</strong> Use your built-in or USB-connected webcam.</li>
+        <li><strong>IP LAN Camera:</strong> Enter the connection URL in the format (e.g., <em>rtsp://username:password@192.168.1.100:554/stream</em>).</li>
+        <li><strong>WiFi Camera:</strong> Similar to an IP LAN camera, but connects wirelessly.</li>
+      </ul>
+      <p>
+        In <em>Simple Mode</em>, the system will automatically generate the connection URL based on parameters such as protocol (RTSP, HTTP, etc.), username, password, IP, and port.
+      </p>
+    </section>
+
+    <!-- Control Panel -->
+    <section id="control-panel" class="fade-in-section">
+      <h2>Control Panel</h2>
+      <p>
+        Once you have successfully logged in to the database and connected your camera, you will be redirected to the control panel. The interface features:
+      </p>
+      <ul>
+        <li>Smooth animations and rounded buttons/inputs.</li>
+        <li>An option to switch between Dark and Light modes.</li>
+        <li>Logout and exit functionalities.</li>
+      </ul>
+      <p>
+        Depending on your user role (SuperUser, Admin, Moderator, User), the control panel will display different management functions.
+      </p>
+    </section>
+
+    <!-- Role-Based Features -->
+    <section id="features" class="fade-in-section">
+      <h2>Role-Based Features</h2>
+      <h3>SuperUser</h3>
+      <p>
+        Full system management: add, edit, delete user accounts, manage students, export data, and adjust system settings.
+      </p>
+      <h3>Admin</h3>
+      <p>
+        Manage student records: add, edit, delete student information, update attendance status, and set cutoff times.
+      </p>
+      <h3>Moderator</h3>
+      <p>
+        Monitor the attendance process and export class-specific reports.
+      </p>
+      <h3>User</h3>
+      <p>
+        View attendance details for assigned students.
+      </p>
+    </section>
+
+    <!-- Detailed Usage Instructions -->
+    <section id="detailed-instructions" class="fade-in-section">
+      <h2>Detailed Usage Instructions</h2>
+      <h3>Step 1: Setup and Database Login</h3>
+      <p>
+        - Launch the software. If the database is not yet created, the system will automatically set it up.<br>
+        - Enter your MySQL login credentials (Host, Username, Password) and click "Login".
+      </p>
+      <h3>Step 2: Configure Camera Connection</h3>
+      <p>
+        - Choose the type of camera: Default Webcam, IP LAN Camera, or WiFi Camera.<br>
+        - For Default Webcam, the system will auto-detect the built-in camera.<br>
+        - For IP LAN or WiFi cameras, enter the connection URL or configure the connection settings (username, password, IP, and port).<br>
+        - In Simple Mode, click the "Generate Link" button for an automatic connection URL.
+      </p>
+      <h3>Step 3: Access the Control Panel</h3>
+      <p>
+        - Once the database and camera configurations are successful, you will be directed to the control panel.<br>
+        - The control panel interface allows you to perform actions based on your assigned user role.
+      </p>
+      <h3>Step 4: Manage Students and Attendance</h3>
+      <p>
+        - As an Admin, add students by clicking "Add Student" and selecting the student's image from your computer.<br>
+        - Edit or delete student records using the corresponding buttons on the list.<br>
+        - When taking attendance, the system automatically updates the status (on time, late, etc.) based on the cutoff time.
+      </p>
+      <h3>Step 5: Export Data and Set Cutoff Time</h3>
+      <p>
+        - Managers can export the student list as a CSV file for record keeping or reporting.<br>
+        - Use the "Set Cutoff Time" feature to define a deadline for attendance. Students checking in after the cutoff will be flagged as "Late".
+      </p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Facial Recognition Software. All rights reserved.</p>
+  </footer>
+  <script>
+    // Fade-in effect for sections on scroll
+    document.addEventListener('DOMContentLoaded', function() {
+      const sections = document.querySelectorAll('.fade-in-section');
+      const observerOptions = { threshold: 0.15 };
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+      sections.forEach(section => observer.observe(section));
+    });
+  </script>
+</body>
+</html>
