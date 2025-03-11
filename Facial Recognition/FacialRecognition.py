@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import torch
 from datetime import datetime
 import tkinter as tk
@@ -115,13 +114,17 @@ def main(cnx, cursor, camera_source=None):
     """
     Hàm chính nhận diện khuôn mặt và cập nhật điểm danh.
     Sử dụng deep learning với MTCNN và resnet chạy trên CPU nhằm tối ưu cho GPU yếu.
+
+    CHỈNH SỬA: Nếu không có khuôn mặt trong DB, vẫn mở camera và hiển thị cảnh báo.
     """
     known_faces = load_known_faces(cursor)
-    if not known_faces:
-        messagebox.showerror("Lỗi", "Không có khuôn mặt nào được tải từ DB!")
-        return
-
-    knn_clf, student_dict = train_knn_classifier(known_faces)
+    if known_faces:
+        knn_clf, student_dict = train_knn_classifier(known_faces)
+    else:
+        messagebox.showwarning("Cảnh báo",
+                               "Không có khuôn mặt nào được tải từ DB! Hệ thống sẽ chạy ở chế độ không nhận dạng.")
+        knn_clf = None
+        student_dict = {}
 
     if camera_source is None:
         camera_source = get_camera_source()
@@ -147,11 +150,11 @@ def main(cnx, cursor, camera_source=None):
         processed_frame, scale = preprocess_frame(frame, target_width=600)
         rgb_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
 
+        face_locations = []
+        face_results = []
         if process_this_frame:
             # Sử dụng MTCNN để phát hiện khuôn mặt
             boxes, _ = mtcnn.detect(rgb_frame)
-            face_locations = []
-            face_results = []
             if boxes is not None:
                 face_crops = []
                 for box in boxes:
@@ -170,13 +173,16 @@ def main(cnx, cursor, camera_source=None):
                     with torch.no_grad():
                         embeddings = resnet(faces_batch).detach().cpu().numpy()
                     for emb in embeddings:
-                        distances, indices = knn_clf.kneighbors([emb], n_neighbors=1)
-                        if distances[0][0] < threshold:
-                            student_id = knn_clf.predict([emb])[0]
-                            name = student_dict.get(student_id, "Unknown")
+                        if knn_clf is not None:
+                            distances, indices = knn_clf.kneighbors([emb], n_neighbors=1)
+                            if distances[0][0] < threshold:
+                                student_id = knn_clf.predict([emb])[0]
+                                name = student_dict.get(student_id, "Unknown")
+                            else:
+                                name = "Unknown"
                         else:
                             name = "Unknown"
-                        face_results.append((name, student_id))
+                        face_results.append((name, None))
         process_this_frame = not process_this_frame
 
         now = datetime.now()
