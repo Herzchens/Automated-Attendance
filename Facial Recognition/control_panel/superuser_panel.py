@@ -1,15 +1,9 @@
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog
 import sys, datetime
-from .common import translations, CustomTable
-from .PanelOperations import (
-    add_student_ui,
-    edit_student_ui,
-    remove_student_ui,
-    set_cutoff_time,
-    export_students_list,
-    calculate_attendance_status
-)
+from translator import translations
+from control_panel.components import CustomTable, add_student_ui, edit_student_ui, remove_student_ui, add_students_batch_ui, edit_user_operation, delete_user_operation
+from DatabaseHooking import set_cutoff_time, export_students_list, calculate_attendance_status
 
 class SuperUserControlPanel(ctk.CTk):
     def __init__(self, user_info, cnx, cursor, language):
@@ -42,7 +36,7 @@ class SuperUserControlPanel(ctk.CTk):
         self.tabview.add(self.trans["user_accounts_tab"])
         self.tabview.add(self.trans["students_tab"])
 
-        # Tab quản lý tài khoản (ví dụ: hiển thị danh sách tài khoản)
+        # Tab quản lý tài khoản
         accounts_frame = self.tabview.tab(self.trans["user_accounts_tab"])
         self.accounts_table = CustomTable(accounts_frame, columns=["ID", "Username", "Role"], corner_radius=8)
         self.accounts_table.pack(fill="both", expand=True)
@@ -78,6 +72,14 @@ class SuperUserControlPanel(ctk.CTk):
             command=lambda: set_cutoff_time(self.language)
         )
         self.button_cutoff.grid(row=0, column=4, padx=10, pady=5)
+
+        # Tạo bảng hiển thị danh sách học sinh trong tab "students_tab"
+        self.students_table = CustomTable(
+            students_frame,
+            columns=[self.trans["col_index"], self.trans["col_name"], self.trans["col_attendance"]],
+            corner_radius=8
+        )
+        self.students_table.pack(fill="both", expand=True)
 
         self.search_frame = ctk.CTkFrame(self)
         self.search_frame.pack(pady=10)
@@ -127,14 +129,19 @@ class SuperUserControlPanel(ctk.CTk):
         except Exception as e:
             messagebox.showerror("Error", f"Error fetching account data:\n{e}")
             return
+
         self.accounts_table.clear_rows()
         if not rows:
             self.accounts_table.pack_forget()
-            self.accounts_watermark = ctk.CTkLabel(self.tabview.tab(self.trans["user_accounts_tab"]),
-                                                   text=self.trans["no_data"], font=("Arial", 48), fg_color="transparent")
+            self.accounts_watermark = ctk.CTkLabel(
+                self.tabview.tab(self.trans["user_accounts_tab"]),
+                text=self.trans["no_data"],
+                font=("Arial", 48),
+                fg_color="transparent"
+            )
             self.accounts_watermark.place(relx=0.5, rely=0.5, anchor="center")
         else:
-            if hasattr(self, "accounts_watermark"):
+            if hasattr(self, "accounts_watermark") and self.accounts_watermark.winfo_exists():
                 self.accounts_watermark.destroy()
             self.accounts_table.pack(fill="both", expand=True)
             for row in rows:
@@ -149,27 +156,28 @@ class SuperUserControlPanel(ctk.CTk):
         except Exception as e:
             messagebox.showerror("Error", f"Error fetching student data:\n{e}")
             return
-        # Cập nhật bảng hiển thị
-        if hasattr(self, "students_table"):
-            self.students_table.clear_rows()
-            if not rows:
-                self.students_table.pack_forget()
-                self.students_watermark = ctk.CTkLabel(self.tabview.tab(self.trans["students_tab"]),
-                                                       text=self.trans["no_data"], font=("Arial", 48), fg_color="transparent")
+
+        self.students_table.clear_rows()
+        if not rows:
+            self.students_table.pack_forget()
+            if not hasattr(self, "students_watermark") or not self.students_watermark.winfo_exists():
+                self.students_watermark = ctk.CTkLabel(
+                    self.tabview.tab(self.trans["students_tab"]),
+                    text=self.trans["no_data"],
+                    font=("Arial", 48),
+                    fg_color="transparent"
+                )
                 self.students_watermark.place(relx=0.5, rely=0.5, anchor="center")
-            else:
-                if hasattr(self, "students_watermark"):
-                    self.students_watermark.destroy()
-                self.students_table.pack(fill="both", expand=True)
-                for idx, row in enumerate(rows, start=1):
-                    if row[3] is not None and isinstance(row[3], datetime.datetime):
-                        attendance = calculate_attendance_status(row[3], self.language)
-                    else:
-                        attendance = '✖'
-                    self.students_table.add_row((idx, row[1], attendance))
         else:
-            # Chưa Tạo
-            pass
+            if hasattr(self, "students_watermark") and self.students_watermark.winfo_exists():
+                self.students_watermark.destroy()
+            self.students_table.pack(fill="both", expand=True)
+            for idx, row in enumerate(rows, start=1):
+                if row[3] is not None and isinstance(row[3], datetime.datetime):
+                    attendance = calculate_attendance_status(row[3], self.language)
+                else:
+                    attendance = '✖'
+                self.students_table.add_row((idx, row[1], attendance))
 
     def get_selected_student(self):
         idx = self.students_table.selected_row_index
@@ -198,6 +206,7 @@ class SuperUserControlPanel(ctk.CTk):
         if not search_term:
             self.load_students_data()
             return
+
         query = "SELECT id, HoVaTen, DiemDanhStatus, ThoiGianDiemDanh FROM Students WHERE LOWER(HoVaTen) LIKE %s ORDER BY id"
         try:
             self.cursor.execute(query, (f"%{search_term}%",))
@@ -206,23 +215,28 @@ class SuperUserControlPanel(ctk.CTk):
         except Exception as e:
             messagebox.showerror("Error", f"Error searching data:\n{e}")
             return
-        if hasattr(self, "students_table"):
-            self.students_table.clear_rows()
-            if not rows:
-                self.students_table.pack_forget()
-                self.students_watermark = ctk.CTkLabel(self.tabview.tab(self.trans["students_tab"]),
-                                                       text=self.trans["no_data"], font=("Arial", 48), fg_color="transparent")
+
+        self.students_table.clear_rows()
+        if not rows:
+            self.students_table.pack_forget()
+            if not hasattr(self, "students_watermark") or not self.students_watermark.winfo_exists():
+                self.students_watermark = ctk.CTkLabel(
+                    self.tabview.tab(self.trans["students_tab"]),
+                    text=self.trans["no_data"],
+                    font=("Arial", 48),
+                    fg_color="transparent"
+                )
                 self.students_watermark.place(relx=0.5, rely=0.5, anchor="center")
-            else:
-                if hasattr(self, "students_watermark"):
-                    self.students_watermark.destroy()
-                self.students_table.pack(fill="both", expand=True)
-                for idx, row in enumerate(rows, start=1):
-                    if row[3] is not None and isinstance(row[3], datetime.datetime):
-                        attendance = calculate_attendance_status(row[3], self.language)
-                    else:
-                        attendance = '✖'
-                    self.students_table.add_row((idx, row[1], attendance))
+        else:
+            if hasattr(self, "students_watermark") and self.students_watermark.winfo_exists():
+                self.students_watermark.destroy()
+            self.students_table.pack(fill="both", expand=True)
+            for idx, row in enumerate(rows, start=1):
+                if row[3] is not None and isinstance(row[3], datetime.datetime):
+                    attendance = calculate_attendance_status(row[3], self.language)
+                else:
+                    attendance = '✖'
+                self.students_table.add_row((idx, row[1], attendance))
 
     def logout(self):
         self.destroy()

@@ -1,8 +1,10 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import sys, datetime
-from .common import translations, CustomTable
-from .PanelOperations import export_students_list, calculate_attendance_status
+from translator import translations
+from control_panel.components import CustomTable, add_student_ui, edit_student_ui, remove_student_ui, add_students_batch_ui, edit_user_operation, delete_user_operation
+from DatabaseHooking import set_cutoff_time, export_students_list, calculate_attendance_status
+
 
 class UserControlPanel(ctk.CTk):
     def __init__(self, user_info, cnx, cursor, language):
