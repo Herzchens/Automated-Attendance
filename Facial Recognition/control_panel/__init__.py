@@ -2,7 +2,9 @@ from .admin_panel import AdminControlPanel
 from .moderator_panel import ModeratorControlPanel
 from .user_panel import UserControlPanel
 from .superuser_panel import SuperUserControlPanel
-from .common import translations, CustomTable
+from translator import translations
+from control_panel.components import CustomTable, add_student_ui, edit_student_ui, remove_student_ui, add_students_batch_ui, edit_user_operation, delete_user_operation
+
 
 def open_user_login_window(cnx, cursor, language):
     from GUI import UserLoginWindow
