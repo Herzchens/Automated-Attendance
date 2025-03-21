@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox, simpledialog, filedialog
-import time, random, datetime
+import time, random, datetime, re
 from translator import translations
-from DatabaseHooking import add_student, update_student, remove_student, add_students_batch
+from DatabaseHooking import add_student, update_student, remove_student, add_students_batch, update_cutoff_time
 
 #######################################
 # UI COMPONENTS – CÁC THÀNH PHẦN GIAO DIỆN
@@ -142,10 +142,6 @@ class AddStudentImageWindow(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
 
-#######################################
-# UI WRAPPER FUNCTIONS – HÀM GIAO DIỆN
-#######################################
-
 def add_student_ui(parent, cnx, cursor, language, on_success_callback=None):
     """Mở cửa sổ thêm học sinh từ ảnh."""
     AddStudentImageWindow(parent, cnx, cursor, language, on_success_callback=on_success_callback)
@@ -154,7 +150,7 @@ def add_student_ui(parent, cnx, cursor, language, on_success_callback=None):
 def edit_student_ui(parent, cnx, cursor, language, student, on_success_callback=None):
     """
     Hiển thị hộp thoại nhập tên và lớp mới của học sinh và gọi hàm update_student.
-    student: tuple chứa thông tin học sinh (id, HoVaTen, Lop, ...)
+    student: tuple chứa thông tin học sinh (id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh)
     """
     trans = translations[language]
     new_name = simpledialog.askstring(
@@ -207,7 +203,7 @@ def remove_student_ui(parent, cnx, cursor, language, student, on_success_callbac
 
 def add_students_batch_ui(parent, cnx, cursor, language, on_success_callback=None):
     """
-    Hiển thị hộp thoại chọn thư mục chứa ảnh và gọi hàm batch add từ DatabaseHooking.
+    Hiển thị hộp thoại chọn thư mục chứa ảnh và gọi hàm batch add.
     Mỗi ảnh có tên định dạng: Họ_Tên_Lớp (ví dụ: Nguyen_Van_A_12A).
     """
     trans = translations[language]
@@ -289,3 +285,64 @@ def delete_user_operation(cursor, cnx, account, language):
             messagebox.showerror("Error", str(e))
             return False
     return False
+
+##########################################
+# GIAO DIỆN CÀI ĐẶT HẠN CHÓT (CUT-OFF TIME) - THEO PHONG CÁCH GMT
+##########################################
+
+class CutoffTimeWindowGMT(ctk.CTkToplevel):
+    """
+    Cửa sổ UI cho cài đặt hạn chót với lựa chọn GMT và nhập thời gian theo định dạng HH:MM.
+    Người dùng chọn múi giờ (GMT) từ dropdown và nhập giờ phút (HH:MM).
+    Sau khi nhấn nút Submit, hàm update_cutoff_time() sẽ được gọi để cập nhật DB.
+    """
+    def __init__(self, parent, cnx, cursor, language):
+        super().__init__(parent)
+        self.cnx = cnx
+        self.cursor = cursor
+        self.language = language
+        self.trans = translations[self.language]
+
+        self.title(self.trans.get("set_cutoff", "Set Cutoff Time"))
+        self.geometry("400x200")
+        self.resizable(False, False)
+
+        # Frame cho lựa chọn GMT
+        self.frame_gmt = ctk.CTkFrame(self)
+        self.frame_gmt.pack(pady=10)
+        self.label_gmt = ctk.CTkLabel(self.frame_gmt, text=self.trans.get("gmt", "GMT:"), font=("Arial", 12))
+        self.label_gmt.grid(row=0, column=0, padx=5)
+        # Tạo danh sách các giá trị GMT từ -12 đến +14
+        self.gmt_values = [f"GMT{offset:+d}" for offset in range(-12, 15)]
+        self.combo_gmt = ctk.CTkComboBox(self.frame_gmt, values=self.gmt_values, state="readonly", width=120)
+        self.combo_gmt.set("GMT+0")
+        self.combo_gmt.grid(row=0, column=1, padx=5)
+
+        # Frame cho nhập Hạn chót (HH:MM)
+        self.frame_cutoff = ctk.CTkFrame(self)
+        self.frame_cutoff.pack(pady=10)
+        self.label_cutoff = ctk.CTkLabel(self.frame_cutoff, text=self.trans.get("cutoff_time", "Cutoff Time (HH:MM):"), font=("Arial", 12))
+        self.label_cutoff.grid(row=0, column=0, padx=5)
+        self.entry_cutoff = ctk.CTkEntry(self.frame_cutoff, width=120)
+        self.entry_cutoff.grid(row=0, column=1, padx=5)
+
+        # Nút Submit
+        self.submit_button = ctk.CTkButton(self, text=self.trans.get("submit", "Submit"), command=self.submit_cutoff)
+        self.submit_button.pack(pady=10)
+
+    def submit_cutoff(self):
+        gmt = self.combo_gmt.get()  # Ví dụ "GMT+0"
+        cutoff = self.entry_cutoff.get().strip()  # Giờ phút dưới dạng HH:MM
+
+        # Kiểm tra định dạng HH:MM bằng regex
+        if not re.fullmatch(r"\d{2}:\d{2}", cutoff):
+            messagebox.showerror("Error", self.trans.get("invalid_time_format", "Invalid time format. Please enter HH:MM."))
+            return
+
+        try:
+            # Gọi hàm cập nhật hạn chót từ DatabaseHooking.
+            update_cutoff_time(self.cnx, self.cursor, gmt, cutoff)
+            messagebox.showinfo("Info", self.trans.get("cutoff_set_success", "Cutoff time set successfully."))
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error setting cutoff time:\n{e}")
