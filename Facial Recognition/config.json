@@ -1,6 +1,6 @@
 {
     "theme": "Dark",
-    "language": "Tiếng Việt",
+    "language": "English",
     "db_host": "",
     "db_username": "cm9vdA==",
     "db_password": "SGVyemNoZW4=",
@@ -10,5 +10,11 @@
         "Webcam mặc định",
         "Camera IP LAN",
         "Camera WiFi"
-    ]
+    ],
+    "camera_simple_mode": false,
+    "camera_protocol": "",
+    "camera_user": "",
+    "camera_pass": "",
+    "camera_ip": "",
+    "camera_port": ""
 }

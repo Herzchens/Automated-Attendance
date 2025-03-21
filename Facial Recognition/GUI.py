@@ -2,6 +2,7 @@ import customtkinter as ctk
 import sys, json, os, base64
 from tkinter import messagebox
 from DatabaseHooking import connect_db, create_tables, verify_user, create_default_users
+from translator import translations  # Import bản dịch từ translator.py
 
 
 # --- Hàm load và save cấu hình ---
@@ -86,93 +87,6 @@ def save_config(theme, language, db_host, db_username, db_password,
 config = load_config()
 ctk.set_appearance_mode(config.get("theme", "Light"))
 ctk.set_default_color_theme("blue")
-
-# --- Bản dịch ---
-translations = {
-    "Tiếng Việt": {
-        "mysql_title": "Đăng nhập MySQL",
-        "mysql_label": "Đăng nhập MySQL",
-        "db_host": "Máy chủ CSDL:",
-        "db_username": "Tên đăng nhập CSDL:",
-        "db_password": "Mật khẩu CSDL:",
-        "language": "Ngôn ngữ:",
-        "login": "Đăng nhập",
-        "exit": "Thoát",
-        "toggle_dark": "Chuyển sang Dark",
-        "toggle_light": "Chuyển sang Light",
-        "remember": "Nhớ tôi",
-        "user_title": "Đăng nhập người dùng",
-        "username": "Tên đăng nhập:",
-        "password": "Mật khẩu:",
-        "back": "Quay lại",
-        "control_title": "Bảng điều khiển",
-        "welcome": "Chào mừng",
-        "manage": "Quản lý học sinh",
-        "attendance": "Điểm danh",
-        "export": "Xuất danh sách",
-        "edit": "Chỉnh sửa học sinh",
-        "quit": "Thoát",
-        "no_data": "Không Có Dữ Liệu :(",
-        "camera_header": "Cấu hình Camera",
-        "camera_type_label": "Loại kết nối camera:",
-        "camera_url_label": "Địa chỉ URL:",
-        # --- PHẦN THÊM MỚI: CHẾ ĐỘ ĐƠN GIẢN CHO CAMERA ---
-        "simple_mode": "Chế độ đơn giản",
-        "connection_mode": "Chế độ kết nối:",
-        "camera_username_label": "Tên tài khoản:",
-        "camera_password_label": "Mật khẩu:",
-        "camera_ip_label": "IP của camera:",
-        "camera_port_label": "Cổng:",
-        "generate_link": "Tạo link"
-    },
-    "English": {
-        "mysql_title": "MySQL Login",
-        "mysql_label": "MySQL Login",
-        "db_host": "Database Host:",
-        "db_username": "Database Username:",
-        "db_password": "Database Password:",
-        "language": "Language:",
-        "login": "Login",
-        "exit": "Exit",
-        "toggle_dark": "Switch to Dark",
-        "toggle_light": "Switch to Light",
-        "remember": "Remember me",
-        "user_title": "User Login",
-        "username": "Username:",
-        "password": "Password:",
-        "back": "Back",
-        "control_title": "Control Panel",
-        "welcome": "Welcome",
-        "manage": "Manage Students",
-        "attendance": "Attendance",
-        "export": "Export List",
-        "edit": "Edit Students",
-        "quit": "Quit",
-        "no_data": "No Data :(",
-        "camera_header": "Camera Configuration",
-        "camera_type_label": "Camera Type:",
-        "camera_url_label": "Camera URL:",
-        # --- PHẦN THÊM MỚI: CHẾ ĐỘ ĐƠN GIẢN CHO CAMERA ---
-        "simple_mode": "Simple Mode",
-        "connection_mode": "Connection Type:",
-        "camera_username_label": "Username:",
-        "camera_password_label": "Password:",
-        "camera_ip_label": "Camera IP:",
-        "camera_port_label": "Port:",
-        "generate_link": "Generate Link"
-    }
-}
-
-mapping_vi_to_en = {
-    "Webcam mặc định": "Default Webcam",
-    "Camera IP LAN": "LAN IP Camera",
-    "Camera WiFi": "WiFi Camera"
-}
-mapping_en_to_vi = {
-    "Default Webcam": "Webcam mặc định",
-    "LAN IP Camera": "Camera IP LAN",
-    "WiFi Camera": "Camera WiFi"
-}
 
 
 # --- Cửa sổ chỉnh sửa cấu hình Camera ---
@@ -289,7 +203,6 @@ class MySQLLoginWindow(ctk.CTk):
         self.label_language = ctk.CTkLabel(self.frame_form, text=self.trans["language"])
         self.label_language.grid(row=3, column=0, padx=10, pady=10, sticky="e")
 
-        # Tạo combo_language 1 lần, state="readonly" để chặn gõ tay
         self.combo_language = ctk.CTkComboBox(
             self.frame_form,
             values=["Tiếng Việt", "English"],
@@ -316,7 +229,6 @@ class MySQLLoginWindow(ctk.CTk):
         self.label_camera_type = ctk.CTkLabel(self.frame_camera, text=self.trans["camera_type_label"])
         self.label_camera_type.grid(row=1, column=0, padx=10, pady=10, sticky="e")
 
-        # Tạo combo_camera_type 1 lần, state="readonly" để chặn gõ tay
         self.combo_camera_type = ctk.CTkComboBox(
             self.frame_camera,
             values=self.camera_types,
@@ -457,7 +369,6 @@ class MySQLLoginWindow(ctk.CTk):
         elif protocol == "WebRTC":
             link = "webrtc://..."  # Tuỳ nhu cầu
 
-        # Gán vào ô camera_url
         self.entry_camera_url.configure(state="normal")
         self.entry_camera_url.delete(0, "end")
         self.entry_camera_url.insert(0, link)
@@ -492,7 +403,7 @@ class MySQLLoginWindow(ctk.CTk):
         self.label_camera_type.configure(text=self.trans["camera_type_label"])
         self.label_camera_url.configure(text=self.trans["camera_url_label"])
 
-        # --- Cập nhật label phần "Chế độ đơn giản" ---
+        # Cập nhật phần chế độ đơn giản
         self.switch_simple_mode.configure(text=self.trans["simple_mode"])
         self.label_connection_mode.configure(text=self.trans["connection_mode"])
         self.label_camera_user.configure(text=self.trans["camera_username_label"])
@@ -501,20 +412,10 @@ class MySQLLoginWindow(ctk.CTk):
         self.label_camera_port.configure(text=self.trans["camera_port_label"])
         self.button_generate_link.configure(text=self.trans["generate_link"])
 
-        # Đổi danh sách camera_type sang ngôn ngữ mới
-        new_camera_types = []
-        if new_lang == "English":
-            for cam in self.camera_types:
-                new_camera_types.append(mapping_vi_to_en.get(cam, cam))
-        else:
-            for cam in self.camera_types:
-                new_camera_types.append(mapping_en_to_vi.get(cam, cam))
-
-        self.combo_camera_type.configure(values=new_camera_types)
-        if self.combo_camera_type.get() not in new_camera_types:
-            self.combo_camera_type.set(new_camera_types[0])
-
-        # Cập nhật lại ô URL
+        # Cập nhật lại danh sách camera_types không thay đổi (không cần chuyển đổi)
+        self.combo_camera_type.configure(values=self.camera_types)
+        if self.combo_camera_type.get() not in self.camera_types:
+            self.combo_camera_type.set(self.camera_types[0])
         self.on_camera_type_change(self.combo_camera_type.get())
 
     def toggle_theme(self):
@@ -591,23 +492,15 @@ class MySQLLoginWindow(ctk.CTk):
         open_user_login_window(cnx, cursor, language)
 
     def exit_app(self):
-        # Lưu lại config lần cuối trước khi thoát
-        save_config(
-            self.current_mode,
-            self.combo_language.get(),
-            self.entry_db_host.get().strip(),
-            self.entry_db_username.get().strip(),
-            self.entry_db_password.get().strip(),
-            self.combo_camera_type.get().strip(),
-            self.entry_camera_url.get().strip(),
-            self.camera_types,
-            camera_simple_mode=self.simple_mode,
-            camera_protocol=self.optionmenu_protocol.get().strip(),
-            camera_user=self.entry_camera_user.get().strip(),
-            camera_pass=self.entry_camera_pass.get().strip(),
-            camera_ip=self.entry_camera_ip.get().strip(),
-            camera_port=self.entry_camera_port.get().strip()
-        )
+        save_config(self.current_mode, self.language, self.entry_db_host.get().strip(),
+                    self.entry_db_username.get().strip(), self.entry_db_password.get().strip(),
+                    self.combo_camera_type.get().strip(), self.entry_camera_url.get().strip(), self.camera_types,
+                    camera_simple_mode=self.simple_mode,
+                    camera_protocol=self.optionmenu_protocol.get().strip(),
+                    camera_user=self.entry_camera_user.get().strip(),
+                    camera_pass=self.entry_camera_pass.get().strip(),
+                    camera_ip=self.entry_camera_ip.get().strip(),
+                    camera_port=self.entry_camera_port.get().strip())
         self.destroy()
         sys.exit(0)
 
