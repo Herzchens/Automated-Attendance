@@ -2,9 +2,8 @@ import customtkinter as ctk
 from tkinter import messagebox
 import sys, datetime
 from translator import translations
-from control_panel.components import CustomTable, add_student_ui, edit_student_ui, remove_student_ui, add_students_batch_ui, edit_user_operation, delete_user_operation
-from DatabaseHooking import set_cutoff_time, export_students_list, calculate_attendance_status
-
+from control_panel.components import CustomTable
+from DatabaseHooking import export_students_list, calculate_attendance_status
 
 class UserControlPanel(ctk.CTk):
     def __init__(self, user_info, cnx, cursor, language):
@@ -33,9 +32,16 @@ class UserControlPanel(ctk.CTk):
 
         self.table_frame = ctk.CTkFrame(self)
         self.table_frame.pack(pady=10, padx=40, fill="both", expand=True)
-        columns = [self.trans["col_index"], self.trans["col_name"], self.trans["col_attendance"]]
+        columns = [self.trans["col_index"], self.trans["col_name"], "Lớp", self.trans["col_attendance"]]
         self.custom_table = CustomTable(self.table_frame, columns=columns, corner_radius=8)
         self.custom_table.pack(fill="both", expand=True)
+
+        self.search_frame = ctk.CTkFrame(self)
+        self.search_frame.pack(pady=10)
+        self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text=self.trans["search"])
+        self.search_entry.pack(side="left", padx=10)
+        self.search_button = ctk.CTkButton(self.search_frame, text=self.trans["search"], command=self.search_student)
+        self.search_button.pack(side="left", padx=10)
 
         self.frame_buttons = ctk.CTkFrame(self)
         self.frame_buttons.pack(pady=10)
@@ -57,7 +63,8 @@ class UserControlPanel(ctk.CTk):
 
     def create_theme_toggle(self):
         btn_text = self.trans["toggle_light"] if self.current_mode == "Dark" else self.trans["toggle_dark"]
-        self.toggle_button = ctk.CTkButton(self, text=btn_text, width=40, height=40, corner_radius=8, command=self.toggle_theme)
+        self.toggle_button = ctk.CTkButton(self, text=btn_text, width=40, height=40, corner_radius=8,
+                                           command=self.toggle_theme)
         self.toggle_button.place(relx=0.98, rely=0.02, anchor="ne")
 
     def toggle_theme(self):
@@ -71,10 +78,9 @@ class UserControlPanel(ctk.CTk):
             self.toggle_button.configure(text=self.trans["toggle_dark"])
 
     def fetch_data(self):
-        assigned_class = "12S"
-        query = "SELECT id, HoVaTen, DiemDanhStatus, ThoiGianDiemDanh FROM Students WHERE Lop = %s ORDER BY id"
+        query = "SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh FROM Students ORDER BY id"
         try:
-            self.cursor.execute(query, (assigned_class,))
+            self.cursor.execute(query)
             rows = self.cursor.fetchall()
         except Exception as e:
             messagebox.showerror("Error", f"Error fetching data:\n{e}")
@@ -92,11 +98,43 @@ class UserControlPanel(ctk.CTk):
                 self.watermark_label.destroy()
             self.custom_table.pack(fill="both", expand=True)
             for idx, row in enumerate(rows, start=1):
-                if row[3] is not None and isinstance(row[3], datetime.datetime):
-                    attendance = calculate_attendance_status(row[3], self.language)
+                if row[4] is not None and isinstance(row[4], datetime.datetime):
+                    attendance = calculate_attendance_status(row[4], self.language)
                 else:
                     attendance = '✖'
-                self.custom_table.add_row((idx, row[1], attendance))
+                self.custom_table.add_row((idx, row[1], row[2], attendance))
+
+    def search_student(self):
+        search_term = self.search_entry.get().strip().lower()
+        if not search_term:
+            self.fetch_data()
+            return
+
+        query = "SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh FROM Students WHERE LOWER(HoVaTen) LIKE %s ORDER BY id"
+        try:
+            self.cursor.execute(query, (f"%{search_term}%",))
+            rows = self.cursor.fetchall()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error searching data:\n{e}")
+            return
+        self.custom_table.clear_rows()
+        if not rows:
+            self.custom_table.pack_forget()
+            self.watermark_label = ctk.CTkLabel(
+                self.table_frame, text=self.trans["no_data"],
+                font=("Arial", 48), fg_color="transparent"
+            )
+            self.watermark_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            if hasattr(self, "watermark_label"):
+                self.watermark_label.destroy()
+            self.custom_table.pack(fill="both", expand=True)
+            for idx, row in enumerate(rows, start=1):
+                if row[4] is not None and isinstance(row[4], datetime.datetime):
+                    attendance = calculate_attendance_status(row[4], self.language)
+                else:
+                    attendance = '✖'
+                self.custom_table.add_row((idx, row[1], row[2], attendance))
 
     def logout(self):
         self.destroy()
