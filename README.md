@@ -39,6 +39,12 @@ python GUI.py
 Haven't supported yet
 
 ---
+## Installation Libraries
+```bash
+pip install mysql-connector-python opencv-python torch torchvision torchaudio numpy pillow customtkinter scikit-learn facenet-pytorch tk pyinstaller
+```
+
+---
 
 ## Technologies Used
 - Python 3.9+  
