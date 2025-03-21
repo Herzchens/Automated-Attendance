@@ -1,15 +1,19 @@
 import cv2
 import torch
 import numpy as np
-import requests
+import os
 import json
 import subprocess
 from datetime import datetime
+from pathlib import Path
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from sklearn.neighbors import KNeighborsClassifier
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from DatabaseHooking import get_all_students, update_attendance
+
+# Thêm import cho Pillow
+from PIL import Image, ImageDraw, ImageFont
 
 # ==============================
 # Đọc cấu hình từ file config.json
@@ -39,104 +43,161 @@ else:
     USE_EXTERNAL_API = False
     print("API bên ngoài không được kích hoạt do thiếu thông tin cấu hình.")
 
+
+# ==============================
+# Hàm đọc ảnh hỗ trợ Unicode và khoảng trắng trong đường dẫn
+# ==============================
+def read_image(filename):
+    """
+    Đọc ảnh từ đường dẫn chứa Unicode và khoảng trắng.
+    Sử dụng pathlib để xử lý đường dẫn, mở file ở chế độ binary,
+    và giải mã ảnh bằng cv2.imdecode.
+    """
+    try:
+        path_obj = Path(filename)
+        with open(path_obj, "rb") as f:
+            data = f.read()
+        bytes_array = np.frombuffer(data, dtype=np.uint8)
+        img = cv2.imdecode(bytes_array, cv2.IMREAD_COLOR)
+        return img
+    except Exception as e:
+        print(f"Không thể mở ảnh {filename}: {e}")
+        return None
+
+# ==============================
+# Hàm vẽ text Unicode bằng Pillow
+# ==============================
+def draw_text_pillow(img, text, pos, text_color=(255, 255, 255), font_size=32):
+    """
+    Vẽ text Unicode (có dấu) lên ảnh OpenCV bằng Pillow.
+    - img: ảnh numpy array (BGR)
+    - text: chuỗi unicode
+    - pos: (x, y) toạ độ góc trên trái
+    - text_color: màu (R, G, B)
+    - font_size: cỡ chữ
+    Lưu ý: Cần có font hỗ trợ tiếng Việt, ví dụ 'Arial Unicode.ttf'.
+    """
+    # Chuyển ảnh BGR -> RGB để Pillow xử lý
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(rgb_img)
+
+    draw = ImageDraw.Draw(pil_img)
+    try:
+        # Chọn font (phải có sẵn font .ttf hỗ trợ tiếng Việt)
+        font = ImageFont.truetype("Arial Unicode.ttf", font_size)
+    except:
+        # Nếu không tìm thấy font, dùng default
+        font = ImageFont.load_default()
+
+    draw.text(pos, text, font=font, fill=text_color)
+
+    # Chuyển ngược RGB -> BGR
+    new_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    return new_img
+
+# ==============================
+# Hàm tăng cường ảnh với CLAHE
+# ==============================
+def apply_clahe(image):
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    l_eq = clahe.apply(l)
+    lab_eq = cv2.merge((l_eq, a, b))
+    enhanced = cv2.cvtColor(lab_eq, cv2.COLOR_LAB2BGR)
+    return enhanced
+
+# ==============================
+# Hàm xử lý ảnh: resize, CLAHE, giảm nhiễu và tăng cường độ nét
+# ==============================
+def enhance_image(frame):
+    enhanced = apply_clahe(frame)
+    kernel = np.array([[0, -1, 0],
+                       [-1, 5, -1],
+                       [0, -1, 0]])
+    enhanced = cv2.filter2D(enhanced, -1, kernel)
+    return enhanced
+
+def preprocess_frame(frame, target_width=1200):
+    height, width = frame.shape[:2]
+    scale = 1.0
+    if width > target_width:
+        scale = target_width / float(width)
+        frame = cv2.resize(frame, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
+    processed = cv2.bilateralFilter(frame, d=9, sigmaColor=75, sigmaSpace=75)
+    processed = enhance_image(processed)
+    return processed, scale
+
 # ==============================
 # Khởi tạo mô hình phát hiện khuôn mặt và trích xuất embedding
 # ==============================
-mtcnn = MTCNN(keep_all=True, device=device, thresholds=[0.55, 0.65, 0.75])
+from facenet_pytorch import MTCNN, InceptionResnetV1
+mtcnn = MTCNN(keep_all=True, device=device, thresholds=[0.50, 0.65, 0.75])
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-
 # ==============================
-# Hàm tạo các biến thể của ảnh (data augmentation)
+# Data augmentation
 # ==============================
 def augment_image(image):
     augmented = []
-    # Ảnh gốc
-    augmented.append(image)
-    # Ảnh lật ngang
-    flipped = cv2.flip(image, 1)
-    augmented.append(flipped)
-    # Xoay 5 độ
+    augmented.append(image)  # Ảnh gốc
+    augmented.append(cv2.flip(image, 1))  # Lật ngang
     (h, w) = image.shape[:2]
     center = (w // 2, h // 2)
     M = cv2.getRotationMatrix2D(center, 5, 1.0)
-    rotated = cv2.warpAffine(image, M, (w, h))
-    augmented.append(rotated)
-    # Tăng sáng
-    bright = cv2.convertScaleAbs(image, alpha=1.2, beta=10)
-    augmented.append(bright)
-    # Giảm sáng
-    dark = cv2.convertScaleAbs(image, alpha=0.8, beta=-10)
-    augmented.append(dark)
+    augmented.append(cv2.warpAffine(image, M, (w, h)))  # Xoay 5 độ
+    augmented.append(cv2.convertScaleAbs(image, alpha=1.2, beta=10))  # Tăng sáng
+    augmented.append(cv2.convertScaleAbs(image, alpha=0.8, beta=-10))  # Giảm sáng
     return augmented
 
-
 # ==============================
-# Hàm lấy nguồn camera dựa trên cấu hình
-# ==============================
-def get_camera_source():
-    if config.get("camera_type", "Webcam mặc định") == "Webcam mặc định":
-        return 0
-    else:
-        if config.get("camera_url"):
-            return config["camera_url"]
-        else:
-            protocol = config.get("camera_protocol", "RTSP")
-            user = config.get("camera_user", "")
-            password = config.get("camera_pass", "")
-            ip = config.get("camera_ip", "")
-            port = config.get("camera_port", "")
-            return f"{protocol.lower()}://{user}:{password}@{ip}:{port}"
-
-
-# ==============================
-# Hàm mở luồng video qua FFmpeg (dùng cho RTSP)
-# ==============================
-def open_stream_with_ffmpeg(rtsp_url, width=640, height=480):
-    command = [
-        'ffmpeg',
-        '-rtsp_transport', 'tcp',
-        '-i', rtsp_url,
-        '-f', 'rawvideo',
-        '-pix_fmt', 'bgr24',
-        '-'
-    ]
-    pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10 ** 8)
-    return pipe, width, height
-
-
-# ==============================
-# Hàm load khuôn mặt đã biết từ DB và tạo embedding qua data augmentation
+# Load khuôn mặt từ DB, tạo embedding
 # ==============================
 def load_known_faces(cursor):
-    students = get_all_students(cursor)  # trả về 6 cột: id, HoVaTen, Lop, ImagePath, DiemDanhStatus, ThoiGianDiemDanh
+    from DatabaseHooking import get_all_students
+    students = get_all_students(cursor)
     known_faces = []
+    # Dùng cache để tránh đọc file nhiều lần nếu đường dẫn trùng nhau
+    path_cache = {}
+
     for student in students:
         student_id, HoVaTen, Lop, ImagePath, status, attendance_time = student
-        img = cv2.imread(ImagePath)
-        if img is None:
-            print(f"Không thể tải ảnh: {ImagePath}")
-            continue
-        ref_image = img.copy()  # dùng cho API xác thực
+        # Dùng pathlib để xử lý đường dẫn
+        path_obj = Path(ImagePath)
+
+        if path_obj in path_cache:
+            img = path_cache[path_obj]
+        else:
+            if not path_obj.exists():
+                print(f"File không tồn tại: {path_obj}")
+                continue
+            img = read_image(str(path_obj))
+            if img is None:
+                continue
+            path_cache[path_obj] = img
+
+        # Nếu ảnh quá nhỏ, upscale
+        if img.shape[0] < 100 or img.shape[1] < 100:
+            img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         augmented_images = augment_image(rgb_img)
         embeddings = []
         for aug_img in augmented_images:
             boxes, _ = mtcnn.detect(aug_img)
-            if boxes is None:
+            if boxes is None or len(boxes) == 0:
                 continue
-            x1, y1, x2, y2 = boxes[0]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+            x1, y1, x2, y2 = map(int, boxes[0])
             face_crop = aug_img[y1:y2, x1:x2]
-            # Nếu khuôn mặt nhỏ, upscale nó
+            if face_crop.size == 0:
+                continue
             h_crop, w_crop = face_crop.shape[:2]
-            min_size = 80
-            if h_crop < min_size or w_crop < min_size:
+            if h_crop < 80 or w_crop < 80:
                 face_crop = cv2.resize(face_crop, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
             try:
                 face_crop = cv2.resize(face_crop, (160, 160), interpolation=cv2.INTER_LINEAR)
             except Exception as e:
-                print(f"Lỗi resize ảnh: {ImagePath}", e)
+                print(f"Lỗi resize ảnh: {path_obj} - {e}")
                 continue
             face_tensor = torch.tensor(face_crop, dtype=torch.float32).permute(2, 0, 1) / 255.0
             face_tensor = face_tensor.unsqueeze(0).to(device)
@@ -144,21 +205,21 @@ def load_known_faces(cursor):
                 embedding = resnet(face_tensor).detach().cpu().numpy()[0]
             embeddings.append(embedding)
         if len(embeddings) == 0:
-            print(f"Không tạo được embedding cho ảnh: {ImagePath}")
+            print(f"Không tạo được embedding cho ảnh: {path_obj}")
             continue
         known_faces.append({
             "id": student_id,
             "name": HoVaTen,
             "embeddings": embeddings,
-            "ref_image": ref_image
+            "ref_image": img
         })
     return known_faces
 
-
 # ==============================
-# Huấn luyện mô hình KNN trên các embedding đã trích xuất
+# Huấn luyện KNN
 # ==============================
 def train_knn_classifier(known_faces):
+    from sklearn.neighbors import KNeighborsClassifier
     X = []
     y = []
     student_dict = {}
@@ -176,81 +237,41 @@ def train_knn_classifier(known_faces):
     knn_clf.fit(X, y)
     return knn_clf, student_dict, reference_images
 
-
 # ==============================
-# Hàm xử lý ảnh: resize, giảm nhiễu và tăng cường độ nét
+# Hàm mở webcam USB ngoài (index=1) bằng CAP_MSMF
 # ==============================
-def enhance_image(frame):
-    kernel = np.array([[0, -1, 0],
-                       [-1, 5, -1],
-                       [0, -1, 0]])
-    return cv2.filter2D(frame, -1, kernel)
+def get_camera_source():
+    return 1
 
-
-def preprocess_frame(frame, target_width=1200):
-    height, width = frame.shape[:2]
-    scale = 1.0
-    if width > target_width:
-        scale = target_width / float(width)
-        frame = cv2.resize(frame, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
-    processed = cv2.bilateralFilter(frame, d=9, sigmaColor=75, sigmaSpace=75)
-    processed = enhance_image(processed)
-    return processed, scale
-
-
-# ==============================
-# Hàm gọi API để lấy faceId từ ảnh
-# ==============================
-def get_face_id(image):
-    ret, buf = cv2.imencode('.jpg', image)
-    if not ret:
+def open_camera(camera_source):
+    backend = cv2.CAP_MSMF
+    video_capture = cv2.VideoCapture(camera_source, backend)
+    if video_capture.isOpened():
+        print(f"🎥 Đã mở webcam {camera_source} với CAP_MSMF")
+        return video_capture
+    else:
+        print("❌ Không thể mở webcam USB ngoài!")
         return None
-    headers = {
-        'Ocp-Apim-Subscription-Key': EXTERNAL_API_KEY,
-        'Content-Type': 'application/octet-stream'
-    }
-    params = {'returnFaceId': 'true'}
-    response = requests.post(EXTERNAL_DETECTION_ENDPOINT, params=params, headers=headers, data=buf.tobytes())
-    if response.status_code == 200:
-        faces = response.json()
-        if faces and len(faces) > 0:
-            return faces[0].get("faceId")
-    else:
-        print("Lỗi gọi API detect:", response.status_code, response.text)
-    return None
 
+def open_stream_with_ffmpeg(rtsp_url, width=640, height=480):
+    command = [
+        'ffmpeg',
+        '-rtsp_transport', 'tcp',
+        '-i', rtsp_url,
+        '-f', 'rawvideo',
+        '-pix_fmt', 'bgr24',
+        '-'
+    ]
+    pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10 ** 8)
+    return pipe, width, height
 
 # ==============================
-# Hàm xác thực khuôn mặt qua API (so sánh face_crop và reference_image)
-# ==============================
-def verify_face_with_api(face_crop, reference_image):
-    face_id1 = get_face_id(face_crop)
-    face_id2 = get_face_id(reference_image)
-    if face_id1 is None or face_id2 is None:
-        return False
-    headers = {
-        'Ocp-Apim-Subscription-Key': EXTERNAL_API_KEY,
-        'Content-Type': 'application/json'
-    }
-    payload = {
-        "faceId1": face_id1,
-        "faceId2": face_id2
-    }
-    response = requests.post(EXTERNAL_VERIFY_ENDPOINT, json=payload, headers=headers)
-    if response.status_code == 200:
-        result = response.json()
-        confidence = result.get("confidence", 0)
-        if confidence > 0.7:
-            return True
-    else:
-        print("Lỗi gọi API verify:", response.status_code, response.text)
-    return False
-
-
-# ==============================
-# Hàm chính: nhận diện thời gian thực, cập nhật điểm danh và lưu timestamp
+# Hàm chính: Nhận diện khuôn mặt theo thời gian thực
 # ==============================
 def main(cnx, cursor, camera_source=None):
+    from DatabaseHooking import update_attendance
+
+    # Tải dữ liệu khuôn mặt từ DB và huấn luyện KNN
     known_faces = load_known_faces(cursor)
     if known_faces:
         knn_clf, student_dict, reference_images = train_knn_classifier(known_faces)
@@ -264,110 +285,109 @@ def main(cnx, cursor, camera_source=None):
     if camera_source is None:
         camera_source = get_camera_source()
 
-    # Nếu camera_source là RTSP, dùng FFmpeg để mã hoá lại luồng
-    use_ffmpeg = False
-    if isinstance(camera_source, str) and camera_source.lower().startswith("rtsp://"):
-        pipe, frame_width, frame_height = open_stream_with_ffmpeg(camera_source, width=640, height=480)
-        use_ffmpeg = True
-    else:
-        video_capture = cv2.VideoCapture(camera_source)
-        # Ép sử dụng codec MJPEG (nếu có thể) cho ổn định
-        video_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-
-    if not use_ffmpeg:
-        if not video_capture.isOpened():
-            messagebox.showerror("Lỗi Camera", "Không thể truy cập camera!")
-            return
+    # Mở webcam bằng CAP_MSMF
+    video_capture = open_camera(camera_source)
+    if not video_capture:
+        messagebox.showerror("Lỗi", "Không thể truy cập webcam USB ngoài!")
+        return
 
     print("Bắt đầu nhận diện khuôn mặt theo thời gian thực. Nhấn 'q' để thoát.")
-    threshold = 0.6  # Ngưỡng KNN
+    threshold = 0.6
 
     while True:
-        if use_ffmpeg:
-            raw_frame = pipe.stdout.read(frame_width * frame_height * 3)
-            if len(raw_frame) != frame_width * frame_height * 3:
-                break
-            frame = np.frombuffer(raw_frame, np.uint8).reshape((frame_height, frame_width, 3))
-        else:
-            ret, frame = video_capture.read()
-            if not ret:
-                print("Không thể đọc khung hình từ camera. Kiểm tra kết nối hoặc URL của camera.")
-                break
+        ret, frame = video_capture.read()
+        if not ret:
+            print("Không thể đọc khung hình từ webcam.")
+            break
 
         processed_frame, scale = preprocess_frame(frame, target_width=1200)
         rgb_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
 
         face_locations = []
         face_results = []
-        face_crops_list = []  # dùng cho xác thực qua API
+        face_crops_list = []
 
         boxes, _ = mtcnn.detect(rgb_frame)
-        if boxes is not None:
+        if boxes is not None and len(boxes) > 0:
             for box in boxes:
-                x1, y1, x2, y2 = box
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                x1, y1, x2, y2 = map(int, box)
+                if x1 < 0 or y1 < 0 or x2 > rgb_frame.shape[1] or y2 > rgb_frame.shape[0]:
+                    continue
                 face_crop = rgb_frame[y1:y2, x1:x2]
+                if face_crop.size == 0:
+                    continue
+                h_crop, w_crop = face_crop.shape[:2]
+                if h_crop < 80 or w_crop < 80:
+                    face_crop = cv2.resize(face_crop, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
                 try:
                     face_crop_resized = cv2.resize(face_crop, (160, 160), interpolation=cv2.INTER_LINEAR)
-                except Exception as e:
+                except Exception:
                     continue
                 face_tensor = torch.tensor(face_crop_resized, dtype=torch.float32).permute(2, 0, 1) / 255.0
                 face_tensor = face_tensor.unsqueeze(0).to(device)
-                face_locations.append((y1, x2, y2, x1))  # (top, right, bottom, left)
-                face_crops_list.append(face_crop)  # dùng crop gốc (RGB) cho API
+                face_locations.append((y1, x2, y2, x1))
+                face_crops_list.append(face_crop)
 
-            if face_crops_list:
-                faces_batch = torch.stack([
-                    torch.tensor(cv2.resize(crop, (160, 160), interpolation=cv2.INTER_LINEAR),
-                                 dtype=torch.float32).permute(2, 0, 1) / 255.0
-                    for crop in face_crops_list
-                ]).to(device)
-                with torch.no_grad():
-                    embeddings = resnet(faces_batch).detach().cpu().numpy()
-                for idx, emb in enumerate(embeddings):
-                    if knn_clf is not None:
+            if len(face_crops_list) > 0 and knn_clf is not None:
+                faces_batch = []
+                for crop in face_crops_list:
+                    if crop.size == 0:
+                        continue
+                    c_h, c_w = crop.shape[:2]
+                    if c_h < 80 or c_w < 80:
+                        crop = cv2.resize(crop, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                    try:
+                        crop = cv2.resize(crop, (160, 160), interpolation=cv2.INTER_LINEAR)
+                    except:
+                        continue
+                    crop_tensor = torch.tensor(crop, dtype=torch.float32).permute(2, 0, 1) / 255.0
+                    faces_batch.append(crop_tensor)
+                if len(faces_batch) > 0:
+                    faces_batch = torch.stack(faces_batch).to(device)
+                    with torch.no_grad():
+                        embeddings = resnet(faces_batch).detach().cpu().numpy()
+                    for emb in embeddings:
                         distances, indices = knn_clf.kneighbors([emb], n_neighbors=1)
                         if distances[0][0] < threshold:
                             candidate_id = knn_clf.predict([emb])[0]
                             name = student_dict.get(candidate_id, "Unknown")
-                            if USE_EXTERNAL_API and candidate_id in reference_images:
-                                ref_img = reference_images[candidate_id]
-                                face_crop_bgr = cv2.cvtColor(face_crops_list[idx], cv2.COLOR_RGB2BGR)
-                                if not verify_face_with_api(face_crop_bgr, ref_img):
-                                    name = "Unknown"
                         else:
                             name = "Unknown"
-                    else:
-                        name = "Unknown"
-                    face_results.append((name, candidate_id if name != "Unknown" else None))
+                        face_results.append((name, candidate_id if name != "Unknown" else None))
 
         now = datetime.now()
         detection_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-        deadline = now.replace(hour=7, minute=0, second=0, microsecond=0)
         if len(face_locations) == len(face_results):
             for (name, student_id), (top, right, bottom, left) in zip(face_results, face_locations):
                 top = int(top / scale)
                 right = int(right / scale)
                 bottom = int(bottom / scale)
                 left = int(left / scale)
+
+                # Cập nhật attendance
                 if name != "Unknown" and student_id is not None:
-                    status = "✓" if now <= deadline else "Muộn"
+                    status = "✓" if now.hour < 7 else "Late"
                     update_attendance(cursor, cnx, int(student_id), status, detection_timestamp)
+
+                # Vẽ khung
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
                 cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-                font = cv2.FONT_HERSHEY_DUPLEX
-                cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+
+                # Vẽ text Unicode bằng Pillow
+                # Thay vì cv2.putText, ta gọi draw_text_pillow
+                frame = draw_text_pillow(
+                    frame,
+                    name,
+                    (left + 6, bottom - 30),  # Lùi lên một chút để không bị đè
+                    text_color=(255, 255, 255),
+                    font_size=28
+                )
 
         cv2.imshow("Automated-Attendance", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    if use_ffmpeg:
-        pipe.stdout.close()
-        pipe.stderr.close()
-        pipe.terminate()
-    else:
-        video_capture.release()
+    video_capture.release()
     cv2.destroyAllWindows()
     cursor.close()
     cnx.close()

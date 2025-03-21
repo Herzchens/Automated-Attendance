@@ -1,8 +1,13 @@
 import mysql.connector
 from mysql.connector import Error, errorcode
-import csv
 import os, time, random, datetime
 from tkinter import messagebox, simpledialog, filedialog
+
+# Thêm import cho openpyxl
+try:
+    from openpyxl import Workbook
+except ImportError:
+    messagebox.showwarning("Warning", "Thư viện 'openpyxl' chưa được cài đặt. Hãy cài bằng lệnh: pip install openpyxl")
 
 # Biến global dùng cho cutoff time
 CUTOFF_TIME = None
@@ -85,16 +90,18 @@ def create_default_users(cursor, cnx):
 ############################
 # THAO TÁC VỚI BẢNG STUDENTS
 ############################
-def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, Gender, ImagePath,
+
+def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath,
                 DiemDanhStatus='❌', ThoiGianDiemDanh=None):
     """
     Thêm học sinh vào bảng Students.
+    Mặc định cột Gender là 'Nam' (do ENUM('Nam','Nữ') NOT NULL).
     """
     sql = """
     INSERT INTO Students (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    VALUES (%s, %s, %s, %s, 'Nam', %s, %s, %s)
     """
-    cursor.execute(sql, (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath))
+    cursor.execute(sql, (UID, HoVaTen, NgaySinh, Lop, DiemDanhStatus, ThoiGianDiemDanh, ImagePath))
     cnx.commit()
 
 def update_student(cursor, cnx, student_id, UID=None, HoVaTen=None, NgaySinh=None,
@@ -140,8 +147,6 @@ def remove_student(cursor, cnx, student_id):
 def get_all_students(cursor):
     """
     Lấy đúng 6 cột: (id, HoVaTen, Lop, ImagePath, DiemDanhStatus, ThoiGianDiemDanh).
-    Phù hợp với việc unpack:
-        student_id, HoVaTen, Lop, ImagePath, status, attendance_time = student
     """
     cursor.execute("""
         SELECT 
@@ -171,10 +176,10 @@ def update_attendance(cursor, cnx, student_id, status, time):
     cursor.execute(sql, (status, time, int(student_id)))
     cnx.commit()
 
-
 def export_students_list(cursor, language):
     """
-    Xuất danh sách học sinh ra file CSV (tất cả cột hoặc tuỳ ý).
+    Xuất danh sách học sinh ra file Excel (.xlsx) thay vì CSV.
+    Yêu cầu cài đặt openpyxl (pip install openpyxl).
     """
     try:
         query = """
@@ -187,36 +192,87 @@ def export_students_list(cursor, language):
         if not rows:
             messagebox.showinfo("Info", "No data to export." if language=="English" else "Không có dữ liệu để xuất.")
             return
+
         file_path = filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv")],
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")],
             title="Save as" if language=="English" else "Lưu dưới dạng"
         )
         if file_path:
-            with open(file_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(["ID", "HoVaTen", "Lop", "DiemDanhStatus", "ThoiGianDiemDanh"])
-                writer.writerows(rows)
+            wb = Workbook()
+            ws = wb.active
+            ws.append(["ID", "HoVaTen", "Lop", "DiemDanhStatus", "ThoiGianDiemDanh"])
+            for row in rows:
+                ws.append(list(row))
+            wb.save(file_path)
             messagebox.showinfo("Info", "Exported successfully." if language=="English" else "Xuất dữ liệu thành công.")
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
-def set_cutoff_time(language):
+def update_cutoff_time(cnx, cursor, gmt, cutoff):
     """
-    Hiển thị hộp thoại nhập cutoff time và lưu vào biến global CUTOFF_TIME.
+    Cập nhật hạn chót vào bảng Config với khóa 'cutoff_time'.
+    Lưu giá trị dưới dạng chuỗi "GMT+X HH:MM".
+    Nếu bảng Config chưa tồn tại, tạo bảng đó.
+    """
+    value = f"{gmt} {cutoff}"
+    create_config_table = """
+    CREATE TABLE IF NOT EXISTS Config (
+        config_key VARCHAR(50) PRIMARY KEY,
+        config_value VARCHAR(255) NOT NULL
+    )
+    """
+    cursor.execute(create_config_table)
+    query = """
+    INSERT INTO Config (config_key, config_value)
+    VALUES ('cutoff_time', %s)
+    ON DUPLICATE KEY UPDATE config_value = %s
+    """
+    cursor.execute(query, (value, value))
+    cnx.commit()
+
+
+def set_cutoff_time(language, cnx, cursor):
+    """
+    Yêu cầu nhập múi giờ (GMT offset) và thời gian hạn chót (HH:MM) từ người dùng,
+    sau đó lưu vào bảng Config bằng cách gọi update_cutoff_time.
+    Cập nhật biến global CUTOFF_TIME nếu thành công.
     """
     global CUTOFF_TIME
-    prompt = "Enter cutoff time (HH:MM):" if language=="English" else "Nhập thời gian hạn chót (HH:MM):"
-    cutoff_str = simpledialog.askstring("Set Cutoff", prompt)
-    if cutoff_str:
-        try:
-            cutoff_time = datetime.datetime.strptime(cutoff_str, "%H:%M").time()
-            CUTOFF_TIME = cutoff_time
-            msg = f"Cutoff time set to {cutoff_str}" if language=="English" else f"Thời gian hạn chót được đặt là {cutoff_str}"
-            messagebox.showinfo("Info", msg)
-        except Exception as e:
-            messagebox.showerror("Error", f"Invalid time format: {e}")
-    return CUTOFF_TIME
+    from tkinter import simpledialog, messagebox
+    import datetime
+
+    prompt_gmt = "Enter GMT offset (e.g., 7 or -5):" if language=="English" else "Nhập múi giờ (ví dụ: 7 hoặc -5):"
+    gmt_str = simpledialog.askstring("Set Cutoff", prompt_gmt)
+    if not gmt_str:
+        return None
+    try:
+        gmt_int = int(gmt_str)
+        gmt_display = f"GMT{gmt_int:+d}"
+    except ValueError:
+        messagebox.showerror("Error", "Invalid GMT offset." if language=="English" else "Múi giờ không hợp lệ.")
+        return None
+
+    prompt_cutoff = "Enter cutoff time (HH:MM):" if language=="English" else "Nhập thời gian hạn chót (HH:MM):"
+    cutoff_str = simpledialog.askstring("Set Cutoff", prompt_cutoff)
+    if not cutoff_str:
+        return None
+    try:
+        cutoff_time = datetime.datetime.strptime(cutoff_str, "%H:%M").time()
+    except ValueError:
+        messagebox.showerror("Error", "Invalid time format. Please use HH:MM." if language=="English" else "Định dạng thời gian không hợp lệ. Vui lòng nhập theo định dạng HH:MM.")
+        return None
+
+    try:
+        update_cutoff_time(cnx, cursor, gmt_display, cutoff_str)
+        CUTOFF_TIME = cutoff_time
+        msg = f"Cutoff time set to {gmt_display} {cutoff_str}" if language=="English" else f"Thời gian hạn chót được đặt là {gmt_display} {cutoff_str}"
+        messagebox.showinfo("Info", msg)
+        return cutoff_time
+    except Exception as e:
+        messagebox.showerror("Error", f"Error setting cutoff time: {e}")
+        return None
+
 
 def calculate_attendance_status(attendance_time, language):
     """
@@ -242,6 +298,8 @@ def add_students_batch(cursor, cnx, language, folder):
     """
     Thêm học sinh hàng loạt từ thư mục chứa ảnh.
     Mỗi ảnh có tên file định dạng: Họ_Tên_Lớp (vd: Nguyen_Van_A_12A).
+    Nếu đường dẫn ảnh đã tồn tại trong bảng Students thì không thêm nữa.
+    Gender bị loại bỏ, mặc định là 'Nam'.
     """
     if not folder:
         return 0
@@ -249,6 +307,10 @@ def add_students_batch(cursor, cnx, language, folder):
     for file_name in os.listdir(folder):
         if file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
             image_path = os.path.join(folder, file_name)
+            cursor.execute("SELECT COUNT(*) FROM Students WHERE ImagePath=%s", (image_path,))
+            exists = cursor.fetchone()[0]
+            if exists:
+                continue
             base_name = os.path.splitext(file_name)[0]
             parts = base_name.split('_')
             if len(parts) < 2:
@@ -257,14 +319,14 @@ def add_students_batch(cursor, cnx, language, folder):
             class_name = parts[-1]
             student_name = " ".join(parts[:-1])
             ngay_sinh = datetime.datetime.now().strftime("%Y-%m-%d")
-            gender = ""  # để trống, có thể cập nhật sau
-            uid = f"{int(time.time())}{random.randint(100,999)}"
+            uid = f"{int(time.time())}{random.randint(100, 999)}"
             try:
-                add_student(cursor, cnx, uid, student_name, ngay_sinh, class_name, gender, image_path)
+                add_student(cursor, cnx, uid, student_name, ngay_sinh, class_name, image_path)
                 added_count += 1
             except Exception as e:
                 messagebox.showerror("Error", f"Lỗi thêm học sinh {student_name}: {e}")
-    messagebox.showinfo("Info", f"Đã thêm {added_count} học sinh." if language=="Tiếng Việt" else f"Added {added_count} students.")
+    messagebox.showinfo("Info",
+                        f"Đã thêm {added_count} học sinh." if language=="Tiếng Việt" else f"Added {added_count} students.")
     return added_count
 
 ############################
