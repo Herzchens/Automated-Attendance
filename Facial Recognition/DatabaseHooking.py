@@ -1,25 +1,16 @@
 import mysql.connector
-from mysql.connector import Error, errorcode
+from mysql.connector import errorcode
 import os, time, random, datetime
-from tkinter import messagebox, simpledialog, filedialog
+from tkinter import messagebox, filedialog
 
-# Thêm import cho openpyxl
 try:
     from openpyxl import Workbook
 except ImportError:
     messagebox.showwarning("Warning", "Thư viện 'openpyxl' chưa được cài đặt. Hãy cài bằng lệnh: pip install openpyxl")
 
-# Biến global dùng cho cutoff time
 CUTOFF_TIME = None
 
-############################
-# KẾT NỐI VÀ TẠO DATABASE
-############################
 def connect_db(user, password, host, database="Facial_Recognition"):
-    """
-    Kết nối tới MySQL và sử dụng database được chỉ định.
-    Nếu database không tồn tại, tự động tạo mới.
-    """
     try:
         cnx = mysql.connector.connect(user=user, password=password, host=host, database=database)
         cursor = cnx.cursor(buffered=True)
@@ -66,13 +57,6 @@ def create_tables(cursor):
     cursor.execute(create_users_table)
 
 def create_default_users(cursor, cnx):
-    """
-    4 tài khoản mặc định nếu bảng Users rỗng:
-      - superuser: username: superuser, password: superpass, role: superuser
-      - admin: username: admin, password: adminpass, role: admin
-      - moderator: username: moderator, password: modpass, role: moderator
-      - user: username: user, password: userpass, role: user
-    """
     cursor.execute("SELECT COUNT(*) FROM Users")
     count = cursor.fetchone()[0]
     if count == 0:
@@ -87,16 +71,7 @@ def create_default_users(cursor, cnx):
             cursor.execute(sql, user)
         cnx.commit()
 
-############################
-# THAO TÁC VỚI BẢNG STUDENTS
-############################
-
-def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath,
-                DiemDanhStatus='❌', ThoiGianDiemDanh=None):
-    """
-    Thêm học sinh vào bảng Students.
-    Mặc định cột Gender là 'Nam' (do ENUM('Nam','Nữ') NOT NULL).
-    """
+def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath, DiemDanhStatus='❌', ThoiGianDiemDanh=None):
     sql = """
     INSERT INTO Students (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath)
     VALUES (%s, %s, %s, %s, 'Nam', %s, %s, %s)
@@ -104,12 +79,7 @@ def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath,
     cursor.execute(sql, (UID, HoVaTen, NgaySinh, Lop, DiemDanhStatus, ThoiGianDiemDanh, ImagePath))
     cnx.commit()
 
-def update_student(cursor, cnx, student_id, UID=None, HoVaTen=None, NgaySinh=None,
-                   Lop=None, Gender=None, ImagePath=None):
-    """
-    Cập nhật thông tin học sinh theo student_id.
-    Chỉ cập nhật các trường khác None.
-    """
+def update_student(cursor, cnx, student_id, UID=None, HoVaTen=None, NgaySinh=None, Lop=None, Gender=None, ImagePath=None):
     updates = []
     params = []
     if UID is not None:
@@ -137,17 +107,11 @@ def update_student(cursor, cnx, student_id, UID=None, HoVaTen=None, NgaySinh=Non
         cnx.commit()
 
 def remove_student(cursor, cnx, student_id):
-    """
-    Xoá học sinh khỏi bảng Students theo student_id.
-    """
     sql = "DELETE FROM Students WHERE id=%s"
     cursor.execute(sql, (student_id,))
     cnx.commit()
 
 def get_all_students(cursor):
-    """
-    Lấy đúng 6 cột: (id, HoVaTen, Lop, ImagePath, DiemDanhStatus, ThoiGianDiemDanh).
-    """
     cursor.execute("""
         SELECT 
             id, 
@@ -177,10 +141,6 @@ def update_attendance(cursor, cnx, student_id, status, time):
     cnx.commit()
 
 def export_students_list(cursor, language):
-    """
-    Xuất danh sách học sinh ra file Excel (.xlsx) thay vì CSV.
-    Yêu cầu cài đặt openpyxl (pip install openpyxl).
-    """
     try:
         query = """
             SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh
@@ -210,11 +170,6 @@ def export_students_list(cursor, language):
         messagebox.showerror("Error", str(e))
 
 def update_cutoff_time(cnx, cursor, gmt, cutoff):
-    """
-    Cập nhật hạn chót vào bảng Config với khóa 'cutoff_time'.
-    Lưu giá trị dưới dạng chuỗi "GMT+X HH:MM".
-    Nếu bảng Config chưa tồn tại, tạo bảng đó.
-    """
     value = f"{gmt} {cutoff}"
     create_config_table = """
     CREATE TABLE IF NOT EXISTS Config (
@@ -233,11 +188,6 @@ def update_cutoff_time(cnx, cursor, gmt, cutoff):
 
 
 def set_cutoff_time(language, cnx, cursor):
-    """
-    Yêu cầu nhập múi giờ (GMT offset) và thời gian hạn chót (HH:MM) từ người dùng,
-    sau đó lưu vào bảng Config bằng cách gọi update_cutoff_time.
-    Cập nhật biến global CUTOFF_TIME nếu thành công.
-    """
     global CUTOFF_TIME
     from tkinter import simpledialog, messagebox
     import datetime
@@ -275,12 +225,6 @@ def set_cutoff_time(language, cnx, cursor):
 
 
 def calculate_attendance_status(attendance_time, language):
-    """
-    Dựa vào thời gian điểm danh và CUTOFF_TIME, trả về:
-      - "Late"/"Muộn" nếu điểm danh muộn.
-      - Thời gian (HH:MM:SS) nếu đúng giờ.
-      - "✖" nếu chưa điểm danh.
-    """
     if attendance_time is None:
         return "✖"
     try:
@@ -295,12 +239,6 @@ def calculate_attendance_status(attendance_time, language):
         return "Error"
 
 def add_students_batch(cursor, cnx, language, folder):
-    """
-    Thêm học sinh hàng loạt từ thư mục chứa ảnh.
-    Mỗi ảnh có tên file định dạng: Họ_Tên_Lớp (vd: Nguyen_Van_A_12A).
-    Nếu đường dẫn ảnh đã tồn tại trong bảng Students thì không thêm nữa.
-    Gender bị loại bỏ, mặc định là 'Nam'.
-    """
     if not folder:
         return 0
     added_count = 0
@@ -333,24 +271,15 @@ def add_students_batch(cursor, cnx, language, folder):
 # THAO TÁC VỚI BẢNG USERS
 ############################
 def add_user(cursor, cnx, username, password, role="user"):
-    """
-    Thêm người dùng mới vào bảng Users.
-    """
     sql = "INSERT INTO Users (username, password, role) VALUES (%s, %s, %s)"
     cursor.execute(sql, (username, password, role))
     cnx.commit()
 
 def verify_user(cursor, username, password):
-    """
-    Kiểm tra đăng nhập, trả về (id, username, role) nếu đúng.
-    """
     sql = "SELECT id, username, role FROM Users WHERE username=%s AND password=%s"
     cursor.execute(sql, (username, password))
     return cursor.fetchone()
 
 def get_all_users(cursor):
-    """
-    Lấy danh sách tất cả người dùng.
-    """
     cursor.execute("SELECT id, username, role FROM Users")
     return cursor.fetchall()

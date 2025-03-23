@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hướng Dẫn Sử Dụng Phần Mềm Nhận Diện Khuôn Mặt</title>
   <style>
-    /* Reset cơ bản */
     * {
       margin: 0;
       padding: 0;
@@ -62,10 +61,7 @@
       transform: translateY(20px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
-    section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+
     h2 {
       margin-bottom: 15px;
       color: #007BFF;
@@ -100,15 +96,12 @@
     </ul>
   </nav>
   <main>
-    <!-- Giới thiệu -->
     <section id="gioi-thieu" class="fade-in-section">
       <h2>Giới thiệu</h2>
       <p>
         Phần mềm nhận diện khuôn mặt được thiết kế nhằm hỗ trợ việc điểm danh và quản lý học sinh thông qua công nghệ nhận diện khuôn mặt. Hệ thống tích hợp với cơ sở dữ liệu MySQL và hỗ trợ kết nối với nhiều loại camera như webcam mặc định, camera IP LAN và camera WiFi.
       </p>
     </section>
-
-    <!-- Cài đặt & Đăng nhập CSDL -->
     <section id="cai-dat" class="fade-in-section">
       <h2>Cài đặt & Đăng nhập CSDL</h2>
       <p>
@@ -132,8 +125,6 @@
         <li>User: <strong>user / userpass</strong></li>
       </ul>
     </section>
-
-    <!-- Kết nối Camera -->
     <section id="ket-noi-camera" class="fade-in-section">
       <h2>Kết nối Camera</h2>
       <p>
@@ -148,8 +139,6 @@
         Nếu bạn chọn <em>chế độ đơn giản</em>, hệ thống sẽ hỗ trợ tự động tạo link kết nối dựa trên các thông số như giao thức (RTSP, HTTP, …), username, password, IP và cổng của camera.
       </p>
     </section>
-
-    <!-- Bảng điều khiển -->
     <section id="bang-dieu-khien" class="fade-in-section">
       <h2>Bảng điều khiển</h2>
       <p>
@@ -164,8 +153,6 @@
         Tùy theo vai trò người dùng (SuperUser, Admin, Moderator, User), giao diện sẽ hiển thị các chức năng quản lý khác nhau.
       </p>
     </section>
-
-    <!-- Tính năng theo cấp -->
     <section id="tinh-nang" class="fade-in-section">
       <h2>Tính năng theo cấp</h2>
       <h3>SuperUser</h3>
@@ -185,8 +172,6 @@
         Chỉ được xem thông tin điểm danh của học sinh được phân công.
       </p>
     </section>
-
-    <!-- Hướng dẫn sử dụng chi tiết -->
     <section id="huong-dan-su-dung" class="fade-in-section">
       <h2>Hướng Dẫn Sử Dụng Chi Tiết</h2>
       <h3>Bước 1: Cài đặt và đăng nhập CSDL</h3>
@@ -220,7 +205,6 @@
     </section>
   </main>
   <script>
-    // Hiệu ứng fade-in cho các section khi cuộn vào vùng nhìn thấy
     document.addEventListener('DOMContentLoaded', function() {
       const sections = document.querySelectorAll('.fade-in-section');
       const observerOptions = { threshold: 0.15 };
