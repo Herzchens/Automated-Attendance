@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>User Guide for Facial Recognition Software</title>
   <style>
-    /* Basic Reset */
     * {
       margin: 0;
       padding: 0;
@@ -62,10 +61,7 @@
       transform: translateY(20px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
-    section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+
     h2 {
       margin-bottom: 15px;
       color: #007BFF;
@@ -104,15 +100,12 @@
     </ul>
   </nav>
   <main>
-    <!-- Introduction -->
     <section id="introduction" class="fade-in-section">
       <h2>Introduction</h2>
       <p>
-        This facial recognition software is designed to manage student attendance through facial recognition technology. The system integrates with a MySQL database and supports multiple camera connections including default webcams, IP LAN cameras, and WiFi cameras.
+        This facial recognition software is designed to manage student attendance through facial recognition technology. The system integrates with a MySQL database and supports multiple camera connections including default webcams, IP LAN cameras, and Wi-Fi cameras.
       </p>
     </section>
-
-    <!-- Setup & Database Login -->
     <section id="setup" class="fade-in-section">
       <h2>Setup & Database Login</h2>
       <p>
@@ -136,8 +129,6 @@
         <li>User: <strong>user / userpass</strong></li>
       </ul>
     </section>
-
-    <!-- Camera Connection -->
     <section id="camera-connection" class="fade-in-section">
       <h2>Camera Connection</h2>
       <p>
@@ -146,14 +137,12 @@
       <ul>
         <li><strong>Default Webcam:</strong> Use your built-in or USB-connected webcam.</li>
         <li><strong>IP LAN Camera:</strong> Enter the connection URL in the format (e.g., <em>rtsp://username:password@192.168.1.100:554/stream</em>).</li>
-        <li><strong>WiFi Camera:</strong> Similar to an IP LAN camera, but connects wirelessly.</li>
+        <li><strong>Wi-Fi Camera:</strong> Similar to an IP LAN camera, but connects wireless.</li>
       </ul>
       <p>
         In <em>Simple Mode</em>, the system will automatically generate the connection URL based on parameters such as protocol (RTSP, HTTP, etc.), username, password, IP, and port.
       </p>
     </section>
-
-    <!-- Control Panel -->
     <section id="control-panel" class="fade-in-section">
       <h2>Control Panel</h2>
       <p>
@@ -168,8 +157,6 @@
         Depending on your user role (SuperUser, Admin, Moderator, User), the control panel will display different management functions.
       </p>
     </section>
-
-    <!-- Role-Based Features -->
     <section id="features" class="fade-in-section">
       <h2>Role-Based Features</h2>
       <h3>SuperUser</h3>
@@ -189,8 +176,6 @@
         View attendance details for assigned students.
       </p>
     </section>
-
-    <!-- Detailed Usage Instructions -->
     <section id="detailed-instructions" class="fade-in-section">
       <h2>Detailed Usage Instructions</h2>
       <h3>Step 1: Setup and Database Login</h3>
@@ -200,7 +185,7 @@
       </p>
       <h3>Step 2: Configure Camera Connection</h3>
       <p>
-        - Choose the type of camera: Default Webcam, IP LAN Camera, or WiFi Camera.<br>
+        - Choose the type of camera: Default Webcam, IP LAN Camera, or Wi-Fi Camera.<br>
         - For Default Webcam, the system will auto-detect the built-in camera.<br>
         - For IP LAN or WiFi cameras, enter the connection URL or configure the connection settings (username, password, IP, and port).<br>
         - In Simple Mode, click the "Generate Link" button for an automatic connection URL.
@@ -227,7 +212,6 @@
     <p>&copy; 2025 Facial Recognition Software. All rights reserved.</p>
   </footer>
   <script>
-    // Fade-in effect for sections on scroll
     document.addEventListener('DOMContentLoaded', function() {
       const sections = document.querySelectorAll('.fade-in-section');
       const observerOptions = { threshold: 0.15 };

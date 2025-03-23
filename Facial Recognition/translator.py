@@ -1,5 +1,3 @@
-# translator.py
-
 translations = {
     "Tiếng Việt": {
         "mysql_title": "Đăng nhập MySQL",
