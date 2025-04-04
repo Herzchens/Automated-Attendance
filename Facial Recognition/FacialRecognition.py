@@ -8,7 +8,6 @@ import face_recognition
 import numpy as np
 import os
 import json
-from DatabaseHooking import connect_db
 
 # Đọc cấu hình từ file config.json
 with open("config.json", "r", encoding="utf-8") as f:
@@ -29,7 +28,6 @@ enable_denoising = config.get("enable_denoising", True)
 # Các hàm xử lý ảnh
 # ==================================
 def apply_clahe(image):
-    """Cân bằng sáng cục bộ (CLAHE)."""
     if not enable_clahe:
         return image
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
@@ -41,7 +39,6 @@ def apply_clahe(image):
     return enhanced
 
 def enhance_image(frame):
-    """Kết hợp CLAHE và làm nét (sharpen) nếu bật."""
     enhanced = apply_clahe(frame)
     if enable_sharpening:
         kernel = np.array([[0, -1, 0],
@@ -51,9 +48,6 @@ def enhance_image(frame):
     return enhanced
 
 def preprocess_frame(frame, target_width=1200):
-    """
-    Resize ảnh nếu cần, sau đó áp dụng khử nhiễu, CLAHE và làm nét.
-    """
     height, width = frame.shape[:2]
     scale = 1.0
     if width > target_width:
@@ -67,10 +61,6 @@ def preprocess_frame(frame, target_width=1200):
     return processed, scale
 
 def stabilize_frame(prev_gray, curr_gray, curr_frame):
-    """
-    Ổn định khung hình dựa trên optical flow.
-    Nếu không bật hoặc không có khung hình trước, trả về ảnh hiện tại.
-    """
     if not enable_stabilization or prev_gray is None:
         return curr_frame
     prev_pts = cv2.goodFeaturesToTrack(prev_gray, maxCorners=200, qualityLevel=0.01, minDistance=30)
@@ -147,7 +137,6 @@ def predict(X_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
             for pred, loc, rec in zip(knn_clf.predict(faces_encodings), X_face_locations, are_matches)]
 
 def show_prediction_labels_on_image(frame, predictions):
-    """Vẽ bounding box và tên lên ảnh."""
     pil_image = Image.fromarray(frame)
     draw = ImageDraw.Draw(pil_image)
     font = ImageFont.load_default()
@@ -167,22 +156,17 @@ def show_prediction_labels_on_image(frame, predictions):
 # Hàm main chạy vòng lặp điểm danh với multi-frame verification & decay
 # ==================================
 def main(cnx, cursor, camera_source):
-    """
-    Hàm main lấy ảnh từ camera_source, xử lý ảnh, nhận diện khuôn mặt,
-    và chỉ xác nhận điểm danh nếu cùng một tên được nhận diện liên tục qua nhiều khung hình.
-    Cơ chế decay sẽ giảm dần số đếm nếu tên không được nhận diện ở khung hình hiện tại.
-    """
     cap = cv2.VideoCapture(camera_source)
     if not cap.isOpened():
         print("Không thể mở camera!")
         return
 
-    knn_model_path = "trained_knn_model.clf"  # Đường dẫn đến model đã huấn luyện
+    knn_model_path = "trained_knn_model.clf"
     prev_gray = None
-    detection_buffer = {}  # Lưu số lần nhận diện cho từng tên
-    consecutive_frames_threshold = 3  # Số khung hình liên tục cần thiết để xác nhận
-    decay_rate = 1  # Mỗi khung hình nếu không xuất hiện tên sẽ giảm đi 1
-    confirmed_faces = set()  # Danh sách các khuôn mặt đã điểm danh
+    detection_buffer = {}
+    consecutive_frames_threshold = 3
+    decay_rate = 1
+    confirmed_faces = set()
 
     while True:
         ret, frame = cap.read()
@@ -200,11 +184,8 @@ def main(cnx, cursor, camera_source):
         except Exception as e:
             print("Lỗi khi nhận diện:", e)
             predictions = []
-
-        # Lấy tập các tên nhận diện từ khung hình hiện tại (bỏ qua "unknown")
         current_names = set([pred for pred, _ in predictions if pred != "unknown"])
 
-        # Cập nhật detection_buffer: nếu tên xuất hiện tăng, nếu không giảm dần
         for name in list(detection_buffer.keys()):
             if name in current_names:
                 detection_buffer[name] += 1
@@ -216,7 +197,6 @@ def main(cnx, cursor, camera_source):
             if name not in detection_buffer:
                 detection_buffer[name] = 1
 
-        # Xác nhận điểm danh nếu số lần nhận diện vượt ngưỡng và chưa được điểm danh
         for name, count in detection_buffer.items():
             if count >= consecutive_frames_threshold and name not in confirmed_faces:
                 confirmed_faces.add(name)

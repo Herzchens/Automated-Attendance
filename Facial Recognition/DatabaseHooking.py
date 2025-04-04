@@ -124,6 +124,14 @@ def get_all_students(cursor):
     """)
     return cursor.fetchall()
 
+
+def get_students_for_ui(cursor):
+    cursor.execute ("""
+        SELECT UID, HoVaTen, Lop, Gender, NgaySinh, DiemDanhStatus, ThoiGianDiemDanh
+        FROM Students
+    """)
+    return cursor.fetchall()
+
 def get_students_by_class(cursor, class_name):
     sql = """
         SELECT id, UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath
@@ -283,3 +291,13 @@ def verify_user(cursor, username, password):
 def get_all_users(cursor):
     cursor.execute("SELECT id, username, role FROM Users")
     return cursor.fetchall()
+
+def update_user(cursor, cnx, user_id, username, password, role):
+    sql = "UPDATE Users SET username=%s, password=%s, role=%s WHERE id=%s"
+    cursor.execute(sql, (username, password, role, user_id))
+    cnx.commit()
+
+def remove_user(cursor, cnx, user_id):
+    sql = "DELETE FROM Users WHERE id=%s"
+    cursor.execute(sql, (user_id,))
+    cnx.commit()

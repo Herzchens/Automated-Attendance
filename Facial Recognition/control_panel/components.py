@@ -4,10 +4,6 @@ import time, random, datetime, re
 from translator import translations
 from DatabaseHooking import add_student, update_student, remove_student, add_students_batch, update_cutoff_time
 
-#######################################
-# UI COMPONENTS – CÁC THÀNH PHẦN GIAO DIỆN
-#######################################
-
 class CustomTable(ctk.CTkScrollableFrame):
     def __init__(self, parent, columns, column_weights=None, row_height=40, **kwargs):
         super().__init__(parent, **kwargs)
@@ -65,11 +61,6 @@ class CustomTable(ctk.CTkScrollableFrame):
 
 
 class AddStudentImageWindow(ctk.CTkToplevel):
-    """
-    Cửa sổ thêm học sinh từ ảnh.
-    Người dùng chỉ nhập tên, lớp và chọn ảnh.
-    Các trường UID, Ngày sinh và Giới tính được tự tạo mặc định.
-    """
     def __init__(self, parent, cnx, cursor, language, on_success_callback=None):
         super().__init__(parent)
         self.cnx = cnx
@@ -143,15 +134,10 @@ class AddStudentImageWindow(ctk.CTkToplevel):
 
 
 def add_student_ui(parent, cnx, cursor, language, on_success_callback=None):
-    """Mở cửa sổ thêm học sinh từ ảnh."""
     AddStudentImageWindow(parent, cnx, cursor, language, on_success_callback=on_success_callback)
 
 
 def edit_student_ui(parent, cnx, cursor, language, student, on_success_callback=None):
-    """
-    Hiển thị hộp thoại nhập tên và lớp mới của học sinh và gọi hàm update_student.
-    student: tuple chứa thông tin học sinh (id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh)
-    """
     trans = translations[language]
     new_name = simpledialog.askstring(
         "Edit Student",
@@ -180,9 +166,6 @@ def edit_student_ui(parent, cnx, cursor, language, student, on_success_callback=
 
 
 def remove_student_ui(parent, cnx, cursor, language, student, on_success_callback=None):
-    """
-    Xác nhận xoá học sinh và gọi hàm remove_student.
-    """
     trans = translations[language]
     confirm = messagebox.askyesno(
         "Confirm",
@@ -202,10 +185,6 @@ def remove_student_ui(parent, cnx, cursor, language, student, on_success_callbac
 
 
 def add_students_batch_ui(parent, cnx, cursor, language, on_success_callback=None):
-    """
-    Hiển thị hộp thoại chọn thư mục chứa ảnh và gọi hàm batch add.
-    Mỗi ảnh có tên định dạng: Họ_Tên_Lớp (ví dụ: Nguyen_Van_A_12A).
-    """
     trans = translations[language]
     folder = filedialog.askdirectory(title=trans.get("choose_folder", "Chọn thư mục chứa ảnh"))
     if not folder:
@@ -219,10 +198,6 @@ def add_students_batch_ui(parent, cnx, cursor, language, on_success_callback=Non
 
 
 def edit_user_operation(cursor, cnx, account, language):
-    """
-    Hiển thị hộp thoại chỉnh sửa tài khoản người dùng.
-    account: tuple chứa thông tin tài khoản (id, username, role).
-    """
     trans = translations[language]
     new_username = simpledialog.askstring(
         "Edit User",
@@ -253,10 +228,6 @@ def edit_user_operation(cursor, cnx, account, language):
 
 
 def delete_user_operation(cursor, cnx, account, language):
-    """
-    Xác nhận xoá tài khoản người dùng và thực hiện xoá.
-    Không cho phép xoá tài khoản superuser duy nhất.
-    """
     trans = translations[language]
     if account[2].lower() == "superuser":
         cursor.execute("SELECT COUNT(*) FROM Users WHERE LOWER(role) = 'superuser'")
@@ -286,16 +257,7 @@ def delete_user_operation(cursor, cnx, account, language):
             return False
     return False
 
-##########################################
-# GIAO DIỆN CÀI ĐẶT HẠN CHÓT (CUT-OFF TIME) - THEO PHONG CÁCH GMT
-##########################################
-
 class CutoffTimeWindowGMT(ctk.CTkToplevel):
-    """
-    Cửa sổ UI cho cài đặt hạn chót với lựa chọn GMT và nhập thời gian theo định dạng HH:MM.
-    Người dùng chọn múi giờ (GMT) từ dropdown và nhập giờ phút (HH:MM).
-    Sau khi nhấn nút Submit, hàm update_cutoff_time() sẽ được gọi để cập nhật DB.
-    """
     def __init__(self, parent, cnx, cursor, language):
         super().__init__(parent)
         self.cnx = cnx
@@ -331,16 +293,14 @@ class CutoffTimeWindowGMT(ctk.CTkToplevel):
         self.submit_button.pack(pady=10)
 
     def submit_cutoff(self):
-        gmt = self.combo_gmt.get()  # Ví dụ "GMT+0"
-        cutoff = self.entry_cutoff.get().strip()  # Giờ phút dưới dạng HH:MM
+        gmt = self.combo_gmt.get()
+        cutoff = self.entry_cutoff.get().strip()
 
-        # Kiểm tra định dạng HH:MM bằng regex
         if not re.fullmatch(r"\d{2}:\d{2}", cutoff):
             messagebox.showerror("Error", self.trans.get("invalid_time_format", "Invalid time format. Please enter HH:MM."))
             return
 
         try:
-            # Gọi hàm cập nhật hạn chót từ DatabaseHooking.
             update_cutoff_time(self.cnx, self.cursor, gmt, cutoff)
             messagebox.showinfo("Info", self.trans.get("cutoff_set_success", "Cutoff time set successfully."))
             self.destroy()

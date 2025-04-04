@@ -13,12 +13,9 @@ from skimage.filters import sobel
 class SuperResolution:
     @staticmethod
     def bicubic_interpolation(image, scale_factor=2):
-        """1.1: Phóng to ảnh bằng nội suy Bicubic."""
         h, w = image.shape[:2]
         new_dim = (int(w * scale_factor), int(h * scale_factor))
         return cv2.resize(image, new_dim, interpolation=cv2.INTER_CUBIC)
-
-    # Phương pháp dùng deep learning (ví dụ: super_resolution_ai) không được triển khai
 
 # ====================================================
 # 2. Làm nét ảnh (Image Sharpening)
@@ -26,13 +23,11 @@ class SuperResolution:
 class ImageSharpening:
     @staticmethod
     def unsharp_masking(image, kernel_size=(5,5), sigma=1.0, amount=1.5):
-        """2.1: Unsharp Masking – làm nét bằng cách trừ ảnh làm mờ khỏi ảnh gốc."""
         blurred = cv2.GaussianBlur(image, kernel_size, sigma)
         return cv2.addWeighted(image, 1 + amount, blurred, -amount, 0)
 
     @staticmethod
     def high_pass_filtering(image):
-        """2.2: High-Pass Filtering – giữ lại chi tiết tần số cao."""
         kernel = np.array([[-1, -1, -1],
                            [-1,  8, -1],
                            [-1, -1, -1]])
@@ -41,14 +36,12 @@ class ImageSharpening:
 
     @staticmethod
     def laplacian_sharpening(image):
-        """2.3: Laplacian Sharpening – sử dụng toán tử Laplacian để tăng cường cạnh."""
         lap = cv2.Laplacian(image, cv2.CV_64F)
         lap = cv2.convertScaleAbs(lap)
         return cv2.addWeighted(image, 1, lap, 1, 0)
 
     @staticmethod
     def gradient_based_sharpening(image):
-        """2.4: Gradient-based Sharpening – dùng Sobel để làm nét ảnh."""
         sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
         sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
         gradient = cv2.magnitude(sobelx, sobely)
@@ -57,7 +50,6 @@ class ImageSharpening:
 
     @staticmethod
     def wiener_deconvolution(image, kernel_size=5):
-        """2.5: Wiener Deconvolution – khử mờ do rung tay hoặc lấy nét sai."""
         if len(image.shape) == 3:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         else:
@@ -71,22 +63,18 @@ class ImageSharpening:
 class ImageDenoising:
     @staticmethod
     def gaussian_filtering(image, sigma=1):
-        """3.1: Gaussian Filtering – làm mờ ảnh để loại bỏ nhiễu ngẫu nhiên."""
         return cv2.GaussianBlur(image, (0, 0), sigma)
 
     @staticmethod
     def median_filtering(image, kernel_size=3):
-        """3.2: Median Filtering – lọc trung vị, hiệu quả với nhiễu muối tiêu."""
         return cv2.medianBlur(image, kernel_size)
 
     @staticmethod
     def bilateral_filtering(image, diameter=9, sigmaColor=75, sigmaSpace=75):
-        """3.3: Bilateral Filtering – giữ chi tiết cạnh trong khi loại bỏ nhiễu."""
         return cv2.bilateralFilter(image, diameter, sigmaColor, sigmaSpace)
 
     @staticmethod
     def non_local_means_denoising(image, h=10, patch_size=7, patch_distance=11):
-        """3.4: Non-Local Means Denoising – lọc nhiễu dựa trên vùng ảnh tương tự."""
         if len(image.shape) == 3:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         denoised = denoise_nl_means(image, h=h, patch_size=patch_size, patch_distance=patch_distance, multichannel=True)
@@ -94,7 +82,6 @@ class ImageDenoising:
 
     @staticmethod
     def wavelet_denoising(image, wavelet='db1', mode='soft', rescale_sigma=True):
-        """3.5: Wavelet Denoising – phân tích ảnh theo tần số để loại bỏ nhiễu."""
         if len(image.shape) == 3:
             channels = cv2.split(image)
             denoised_channels = []
@@ -108,7 +95,6 @@ class ImageDenoising:
 
     @staticmethod
     def anisotropic_diffusion(image, num_iter=10, kappa=50, gamma=0.1):
-        """3.6: Anisotropic Diffusion – lọc nhiễu theo hướng, bảo toàn cạnh."""
         if image.dtype != np.float32:
             image = image.astype(np.float32)
         for _ in range(num_iter):
@@ -129,14 +115,12 @@ class ImageDenoising:
 class ColorBrightnessAdjustment:
     @staticmethod
     def gamma_correction(image, gamma=1.0):
-        """4.1: Gamma Correction – điều chỉnh độ sáng mà không mất chi tiết."""
         invGamma = 1.0 / gamma
         table = np.array([((i / 255.0) ** invGamma) * 255 for i in range(256)]).astype("uint8")
         return cv2.LUT(image, table)
 
     @staticmethod
     def histogram_equalization(image):
-        """4.2: Histogram Equalization – cải thiện độ tương phản qua cân bằng histogram."""
         if len(image.shape) == 2:
             return cv2.equalizeHist(image)
         ycrcb = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
@@ -145,7 +129,6 @@ class ColorBrightnessAdjustment:
 
     @staticmethod
     def adaptive_histogram_equalization(image, clipLimit=2.0, tileGridSize=(8,8)):
-        """4.3: Adaptive Histogram Equalization (CLAHE) – cân bằng sáng cục bộ."""
         clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
         if len(image.shape) == 2:
             return clahe.apply(image)
@@ -155,7 +138,6 @@ class ColorBrightnessAdjustment:
 
     @staticmethod
     def retinex_algorithm(image, sigma=30):
-        """4.4: Retinex Algorithm – tăng cường độ sáng trong điều kiện ánh sáng yếu."""
         if len(image.shape) == 3:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = image.astype(np.float32) + 1.0
@@ -166,7 +148,6 @@ class ColorBrightnessAdjustment:
 
     @staticmethod
     def white_balance_correction(image):
-        """4.5: White Balance Correction – điều chỉnh cân bằng trắng."""
         lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         avg_a = np.average(lab[:,:,1])
         avg_b = np.average(lab[:,:,2])
@@ -180,14 +161,12 @@ class ColorBrightnessAdjustment:
 class GeometricEnhancements:
     @staticmethod
     def scaling_resampling(image, scale_factor=1.0, interpolation=cv2.INTER_LINEAR):
-        """5.1: Scaling & Resampling – thay đổi kích thước ảnh."""
         h, w = image.shape[:2]
         new_dim = (int(w * scale_factor), int(h * scale_factor))
         return cv2.resize(image, new_dim, interpolation=interpolation)
 
     @staticmethod
     def rotation(image, angle, center=None, scale=1.0):
-        """5.2: Rotation – xoay ảnh quanh tâm."""
         h, w = image.shape[:2]
         if center is None:
             center = (w // 2, h // 2)
@@ -196,14 +175,12 @@ class GeometricEnhancements:
 
     @staticmethod
     def perspective_transformation(image, src_points, dst_points):
-        """5.3: Perspective Transformation – chỉnh lại phối cảnh ảnh."""
         M = cv2.getPerspectiveTransform(np.float32(src_points), np.float32(dst_points))
         h, w = image.shape[:2]
         return cv2.warpPerspective(image, M, (w, h))
 
     @staticmethod
     def morphological_operations(image, operation='opening', kernel_size=3, iterations=1):
-        """5.4: Morphological Operations – thao tác hình thái học (erosion, dilation, opening, closing)."""
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
         if operation == 'erosion':
             return cv2.erode(image, kernel, iterations=iterations)
@@ -222,12 +199,10 @@ class GeometricEnhancements:
 class ControlledBlurring:
     @staticmethod
     def gaussian_blur(image, sigma=1):
-        """6.1: Gaussian Blur – làm mờ ảnh bằng Gaussian."""
         return cv2.GaussianBlur(image, (0, 0), sigma)
 
     @staticmethod
     def motion_blur_simulation(image, kernel_size=15, angle=0):
-        """6.2: Motion Blur Simulation – giả lập hiệu ứng mờ do chuyển động."""
         M = np.zeros((kernel_size, kernel_size))
         center = kernel_size // 2
         angle_rad = np.deg2rad(angle)
@@ -243,7 +218,6 @@ class ControlledBlurring:
 
     @staticmethod
     def radial_zoom_blur(image, strength=0.5):
-        """6.3: Radial & Zoom Blur – hiệu ứng mờ theo hướng tròn hoặc phóng to."""
         h, w = image.shape[:2]
         blurred = np.zeros_like(image, dtype=np.float32)
         steps = 10
@@ -257,7 +231,6 @@ class ControlledBlurring:
 
     @staticmethod
     def surface_blur(image, sigma_space=10, sigma_r=0.15):
-        """6.4: Surface Blur – làm mờ bề mặt ảnh mà vẫn giữ cạnh sắc nét."""
         return cv2.edgePreservingFilter(image, flags=1, sigma_s=sigma_space, sigma_r=sigma_r)
 
 # ====================================================
@@ -266,7 +239,6 @@ class ControlledBlurring:
 class EdgeEnhancement:
     @staticmethod
     def edge_detection(image, method='canny'):
-        """7.1: Edge Detection – phát hiện biên sử dụng Sobel, Prewitt hoặc Canny."""
         if method == 'sobel':
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             grad = cv2.Sobel(gray, cv2.CV_64F, 1, 1, ksize=3)
@@ -291,7 +263,6 @@ class EdgeEnhancement:
 
     @staticmethod
     def local_contrast_enhancement(image, clipLimit=2.0, tileGridSize=(8,8)):
-        """7.2: Local Contrast Enhancement – tăng cường tương phản cục bộ (dùng CLAHE)."""
         clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
         if len(image.shape) == 2:
             return clahe.apply(image)
@@ -301,7 +272,6 @@ class EdgeEnhancement:
 
     @staticmethod
     def gradient_domain_processing(image):
-        """7.3: Gradient Domain Processing – xử lý ảnh dựa trên gradient (placeholder)."""
         grad = sobel(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
         grad = cv2.normalize(grad, None, 0, 255, cv2.NORM_MINMAX)
         grad = cv2.cvtColor(grad.astype(np.uint8), cv2.COLOR_GRAY2BGR)
@@ -313,7 +283,6 @@ class EdgeEnhancement:
 class FrequencyDomainProcessing:
     @staticmethod
     def fourier_transform_processing(image):
-        """8.1: Fourier Transform – chuyển ảnh sang miền tần số và hiển thị phổ."""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         f = np.fft.fft2(gray)
         fshift = np.fft.fftshift(f)
@@ -323,7 +292,6 @@ class FrequencyDomainProcessing:
 
     @staticmethod
     def high_low_pass_filtering(image, filter_type='high', cutoff=30):
-        """8.2: High-Pass & Low-Pass Filtering – lọc chi tiết tần số cao hoặc thấp."""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         f = np.fft.fft2(gray)
         fshift = np.fft.fftshift(f)
@@ -346,24 +314,15 @@ class FrequencyDomainProcessing:
 
     @staticmethod
     def wavelet_transform(image, wavelet='db1', level=1):
-        """8.3: Wavelet Transform – phân tích ảnh qua các cấp độ chi tiết."""
         coeffs = pywt.wavedec2(image, wavelet=wavelet, level=level)
         return coeffs
 
 # ====================================================
-# 9. Tăng cường ảnh bằng Deep Learning & AI
-# ====================================================
-class DeepLearningEnhancement:
-    # Các phương pháp deep learning không được triển khai trong file này.
-    pass
-
-# ====================================================
-# 10. Cải thiện nhận diện khuôn mặt trên ảnh chất lượng thấp
+# 9. Cải thiện nhận diện khuôn mặt trên ảnh chất lượng thấp
 # ====================================================
 class FaceRecognitionEnhancement:
     @staticmethod
     def log_transformation(image, c=1):
-        """10.1: Log Transformation – tăng cường chi tiết vùng tối."""
         image_float = image.astype(np.float32)
         log_image = c * np.log1p(image_float)
         log_image = cv2.normalize(log_image, None, 0, 255, cv2.NORM_MINMAX)
@@ -371,7 +330,6 @@ class FaceRecognitionEnhancement:
 
     @staticmethod
     def power_law_transformation(image, c=1, gamma=1.0):
-        """10.2: Power-Law Transformation – tương tự Gamma Correction nhưng linh hoạt hơn."""
         image_float = image.astype(np.float32)
         power_image = c * np.power(image_float, gamma)
         power_image = cv2.normalize(power_image, None, 0, 255, cv2.NORM_MINMAX)
@@ -379,7 +337,6 @@ class FaceRecognitionEnhancement:
 
     @staticmethod
     def contrast_stretching(image):
-        """10.3: Contrast Stretching – kéo giãn độ tương phản."""
         in_min = np.percentile(image, 2)
         in_max = np.percentile(image, 98)
         stretched = (image - in_min) * (255 / (in_max - in_min))
@@ -388,7 +345,6 @@ class FaceRecognitionEnhancement:
 
     @staticmethod
     def color_space_conversion(image, conversion='YCrCb'):
-        """10.4: Color Space Conversion – chuyển đổi không gian màu (YCrCb, HSV, Lab)."""
         if conversion == 'YCrCb':
             return cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
         elif conversion == 'HSV':
@@ -400,101 +356,47 @@ class FaceRecognitionEnhancement:
 
     @staticmethod
     def edge_aware_filtering(image):
-        """10.5: Edge-aware Filtering – lọc nhiễu nhưng vẫn giữ nét (dùng Bilateral)."""
         return cv2.bilateralFilter(image, 9, 75, 75)
 
 # ====================================================
-# 11. Hiệu chỉnh biến dạng do camera chất lượng thấp
+# 10. Hiệu chỉnh biến dạng do camera chất lượng thấp
 # ====================================================
 class DistortionCorrection:
     @staticmethod
     def radial_distortion_correction(image, camera_matrix, dist_coeffs):
-        """11.1: Radial Distortion Correction – giảm méo hình do ống kính giá rẻ."""
         h, w = image.shape[:2]
         new_cam_mtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (w, h), 1, (w, h))
         return cv2.undistort(image, camera_matrix, dist_coeffs, None, new_cam_mtx)
 
-    # Các phương pháp deep learning cho deblurring (Deblurring CNN) không được triển khai trong file này.
-
-class ImageSharpening:
-    @staticmethod
-    def unsharp_masking(image, kernel_size=(5,5), sigma=1.0, amount=1.5):
-        """
-        Làm nét ảnh bằng phương pháp Unsharp Masking.
-        - Làm mờ ảnh bằng GaussianBlur.
-        - Trừ ảnh làm mờ khỏi ảnh gốc và khuếch đại hiệu ứng.
-        """
-        blurred = cv2.GaussianBlur(image, kernel_size, sigma)
-        sharpened = cv2.addWeighted(image, 1 + amount, blurred, -amount, 0)
-        return sharpened
-
-    @staticmethod
-    def laplacian_sharpening(image):
-        """
-        Làm nét ảnh bằng cách sử dụng toán tử Laplacian.
-        - Tính đạo hàm Laplacian của ảnh.
-        - Kết hợp với ảnh gốc để tăng cường biên.
-        """
-        lap = cv2.Laplacian(image, cv2.CV_64F)
-        lap = cv2.convertScaleAbs(lap)
-        sharpened = cv2.addWeighted(image, 1, lap, 1, 0)
-        return sharpened
-
     @staticmethod
     def high_boost_filtering(image, kernel_size=(3,3), boost=1.5):
-        """
-        Làm nét ảnh bằng High-Boost Filtering.
-        - Làm mờ ảnh để trích xuất thành phần nền (low-pass).
-        - Tính thành phần high-frequency: (image - blurred).
-        - Tăng cường thành phần này và cộng lại với ảnh gốc.
-        """
         blurred = cv2.GaussianBlur(image, kernel_size, 0)
         high_freq = cv2.subtract(image, blurred)
         high_boost = cv2.addWeighted(image, 1, high_freq, boost, 0)
         return high_boost
 class VideoStabilization:
     def __init__(self):
-        # Khởi tạo khung hình trước dưới dạng grayscale
         self.prev_gray = None
 
     def stabilize_frame(self, frame):
-        """
-        Ổn định khung hình hiện tại dựa trên khung hình trước đó.
-        Các bước:
-        + Chuyển khung hình hiện tại sang grayscale.
-        + Nếu chưa có khung hình trước, lưu lại và trả về khung hình ban đầu.
-        + Tính ma trận biến đổi (warp matrix) giữa khung hình trước và hiện tại
-          bằng cv2.findTransformECC.
-        + Áp dụng biến đổi lên khung hình hiện tại để cân bằng chuyển động.
-        + Cập nhật khung hình trước.
-        + Trả về khung hình đã ổn định.
-        """
-        # Chuyển khung hình hiện tại sang grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Nếu đây là khung hình đầu tiên, lưu và trả về
         if self.prev_gray is None:
             self.prev_gray = gray
             return frame
 
-        # Khởi tạo warp matrix cho chuyển động Euclidean (rotation + translation)
         warp_matrix = np.eye(2, 3, dtype=np.float32)
 
-        # Đặt tiêu chí dừng cho thuật toán tìm biến đổi ECC
         criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 50, 1e-5)
 
         try:
-            # Tìm ma trận biến đổi sao cho khung hình hiện tại khớp với khung hình trước
             cc, warp_matrix = cv2.findTransformECC(self.prev_gray, gray, warp_matrix, cv2.MOTION_EUCLIDEAN, criteria)
         except cv2.error as e:
-            # Nếu không tìm được, giữ nguyên warp matrix ban đầu
             print("findTransformECC error:", e)
 
-        # Áp dụng warp matrix để ổn định khung hình hiện tại
         stabilized_frame = cv2.warpAffine(frame, warp_matrix, (frame.shape[1], frame.shape[0]),
                                           flags=cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
 
-        # Cập nhật khung hình trước (sử dụng khung hình chưa ổn định hoặc đã ổn định tùy trường hợp)
         self.prev_gray = gray
 
         return stabilized_frame

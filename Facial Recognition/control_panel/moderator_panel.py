@@ -3,9 +3,11 @@ from tkinter import messagebox
 import sys, datetime
 from translator import translations
 from control_panel.components import CustomTable
-from DatabaseHooking import set_cutoff_time, export_students_list, calculate_attendance_status
-# Nếu moderator cần gọi UI cài đặt hạn chót, bạn có thể import CutoffTimeWindowGMT
-from control_panel.components import CutoffTimeWindowGMT
+from DatabaseHooking import export_students_list, calculate_attendance_status
+from .components import CutoffTimeWindowGMT
+
+def open_cutoff_ui(self):
+    CutoffTimeWindowGMT(self, self.cnx, self.cursor, self.language)
 
 class ModeratorControlPanel(ctk.CTk):
     def __init__(self, user_info, cnx, cursor, language):
@@ -155,9 +157,8 @@ class ModeratorControlPanel(ctk.CTk):
         self.quit()
 
 if __name__ == "__main__":
-    # Ví dụ: sử dụng thông tin user, cnx, cursor và language để mở panel Moderator.
     user_info = (1, "Moderator", "moderator")
-    cnx, cursor = None, None  # Giả sử đã kết nối DB
+    cnx, cursor = None, None
     language = "Tiếng Việt"
     app = ModeratorControlPanel(user_info, cnx, cursor, language)
     app.mainloop()
