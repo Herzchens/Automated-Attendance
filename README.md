@@ -19,7 +19,7 @@ This is an automatic attendance system that leverages facial recognition technol
 
 ---
 
-## Features (pending)
+## Features 
 ✨ Automatic attendance marking using facial recognition  
 ✨ Real-time facial detection from webcam feed  
 ✨ Image and video file face recognition  
