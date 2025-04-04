@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from translator import translations
-from control_panel.components import (
+from .components import (
     CustomTable,
     add_student_ui,
     edit_student_ui,
@@ -9,7 +9,7 @@ from control_panel.components import (
     add_students_batch_ui,
     edit_user_operation,
     delete_user_operation,
-    CutoffTimeWindowGMT  # Sử dụng UI mới cho cài đặt hạn chót kiểu GMT
+    CutoffTimeWindowGMT
 )
 from DatabaseHooking import (
     export_students_list,
@@ -36,7 +36,6 @@ class SuperUserControlPanel(ctk.CTk):
 
         # Tạo các tabs
         self.create_tabs()
-        # Tạo nút chuyển theme (Dark/Light)
         self.create_theme_toggle()
 
         # Load dữ liệu ban đầu
@@ -44,11 +43,6 @@ class SuperUserControlPanel(ctk.CTk):
         self.load_accounts_data()
 
     def create_tabs(self):
-        """
-        Tạo TabView với 2 tab:
-          - 'Quản lý học sinh' (Students)
-          - 'Quản lý tài khoản' (Users)
-        """
         self.tabview = ctk.CTkTabview(self)
         self.tabview.pack(fill="both", expand=True)
 
@@ -62,9 +56,6 @@ class SuperUserControlPanel(ctk.CTk):
         self.create_users_widgets(self.tab_users)
 
     def create_students_widgets(self, parent):
-        """
-        Bố cục cho tab Quản lý học sinh (Students)
-        """
         greeting = f"{self.trans['welcome']} {self.user_info[1]} ({self.user_info[2]})"
         self.label_greeting = ctk.CTkLabel(parent, text=greeting, font=("Arial", 24))
         self.label_greeting.pack(pady=20)
@@ -152,9 +143,6 @@ class SuperUserControlPanel(ctk.CTk):
         self.button_quit.grid(row=0, column=1, padx=20, pady=10)
 
     def create_users_widgets(self, parent):
-        """
-        Bố cục cho tab Quản lý tài khoản (Users)
-        """
         label_accounts = ctk.CTkLabel(parent, text=self.trans["user_accounts_tab"], font=("Arial", 24))
         label_accounts.pack(pady=20)
 
@@ -401,10 +389,8 @@ class SuperUserControlPanel(ctk.CTk):
         self.destroy()
 
 if __name__ == "__main__":
-    # Ví dụ: sử dụng thông tin user, cnx, cursor và language để mở panel SuperUser.
-    # Đây chỉ là ví dụ; bạn cần thay thế bằng dữ liệu thực tế khi tích hợp.
     user_info = (1, "SuperUser", "superuser")
-    cnx, cursor = None, None  # Giả sử đã kết nối DB
+    cnx, cursor = None, None
     language = "Tiếng Việt"
     app = SuperUserControlPanel(user_info, cnx, cursor, language)
     app.mainloop()

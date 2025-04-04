@@ -1,18 +1,17 @@
 import customtkinter as ctk
-from tkinter import messagebox, simpledialog
-import sys, os, datetime
+from tkinter import messagebox
+import sys
 from translator import translations
 from DatabaseHooking import export_students_list, calculate_attendance_status
-from control_panel.components import (
+from .components import (
     CustomTable,
     add_student_ui,
     edit_student_ui,
     remove_student_ui,
     add_students_batch_ui,
-    CutoffTimeWindowGMT  # Sử dụng UI mới cho cài đặt hạn chót kiểu GMT
+    CutoffTimeWindowGMT
 )
 
-# Hàm mở giao diện cài đặt hạn chót mới (UI GMT)
 def open_cutoff_ui(self):
     CutoffTimeWindowGMT(self, self.cnx, self.cursor, self.language)
 
@@ -41,7 +40,7 @@ class AdminControlPanel(ctk.CTk):
         self.label_greeting = ctk.CTkLabel(self, text=greeting, font=("Arial", 24))
         self.label_greeting.pack(pady=20)
 
-        # Khung tìm kiếm
+        # Search Bar
         self.search_frame = ctk.CTkFrame(self)
         self.search_frame.pack(pady=10)
         self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text=self.trans["search"])
@@ -49,7 +48,7 @@ class AdminControlPanel(ctk.CTk):
         self.search_button = ctk.CTkButton(self.search_frame, text=self.trans["search"], command=self.search_student)
         self.search_button.pack(side="left", padx=10)
 
-        # Khung các nút điều khiển (Thêm, Sửa, Xoá, Batch Add, Set Cutoff)
+        # Tools Bar
         self.frame_controls = ctk.CTkFrame(self)
         self.frame_controls.pack(pady=10, padx=40, fill="x")
         self.button_add = ctk.CTkButton(
@@ -83,14 +82,14 @@ class AdminControlPanel(ctk.CTk):
         )
         self.button_cutoff.grid(row=0, column=4, padx=10, pady=10)
 
-        # Bảng hiển thị danh sách học sinh
+        # Table of Students
         self.table_frame = ctk.CTkFrame(self)
         self.table_frame.pack(pady=10, padx=40, fill="both", expand=True)
         columns = [self.trans["col_index"], self.trans["col_name"], "Lớp", self.trans["col_attendance"]]
         self.custom_table = CustomTable(self.table_frame, columns=columns, corner_radius=8)
         self.custom_table.pack(fill="both", expand=True)
 
-        # Khung các nút bên dưới (Export, Logout, Quit)
+        # Under Buttons
         self.frame_buttons_bottom = ctk.CTkFrame(self)
         self.frame_buttons_bottom.pack(pady=10)
         self.button_export = ctk.CTkButton(
@@ -241,10 +240,8 @@ class AdminControlPanel(ctk.CTk):
         sys.exit(0)
 
 if __name__ == "__main__":
-    # Ví dụ: sử dụng thông tin user, cnx, cursor và language để mở panel Admin.
     user_info = (1, "Admin", "admin")
-    cnx, cursor = None, None  # Giả sử đã kết nối DB
+    cnx, cursor = None, None
     language = "Tiếng Việt"
-    from DatabaseHooking import connect_db  # Nếu cần kết nối DB thực tế
     app = AdminControlPanel(user_info, cnx, cursor, language)
     app.mainloop()

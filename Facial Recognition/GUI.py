@@ -3,7 +3,7 @@ import sys, json, os, base64, threading
 from tkinter import messagebox
 from DatabaseHooking import connect_db, create_tables, verify_user, create_default_users
 from translator import translations
-import FacialRecognition  # Import module xử lý điểm danh (chứa các biến enable_stabilization, enable_clahe, ...)
+import FacialRecognition
 
 # --- Hàm load và save cấu hình ---
 def load_config():
@@ -75,7 +75,7 @@ config = load_config()
 ctk.set_appearance_mode(config.get("theme", "Light"))
 ctk.set_default_color_theme("blue")
 
-# ========= Cửa sổ cấu hình Camera (không thay đổi) =========
+# ========= Cửa sổ cấu hình Camera =========
 class CameraConfigWindow(ctk.CTkToplevel):
     def __init__(self, parent, current_camera_types):
         super().__init__(parent)
@@ -479,7 +479,6 @@ class UserLoginWindow(ctk.CTk):
         from control_panel import open_control_panel
         open_control_panel(user_info, self.cnx, self.cursor, self.language)
 
-    # --- MỞ GIAO DIỆN ĐIỂM DANH TRONG CỬA SỔ RIÊNG (AttendanceWindow) ---
     def open_attendance(self):
         try:
             import json
@@ -531,23 +530,18 @@ class AttendanceWindow(ctk.CTkToplevel):
     def create_widgets(self):
         label = ctk.CTkLabel(self, text="Tùy chọn xử lý ảnh", font=("Arial", 16))
         label.pack(pady=10)
-        # Toggle cho ổn định khung hình
         self.switch_stabilization = ctk.CTkSwitch(self, text="Ổn định khung hình", variable=self.var_stabilization,
                                                   command=self.update_stabilization)
         self.switch_stabilization.pack(pady=5)
-        # Toggle cho cân bằng CLAHE
         self.switch_clahe = ctk.CTkSwitch(self, text="Cân bằng (CLAHE)", variable=self.var_clahe,
                                         command=self.update_clahe)
         self.switch_clahe.pack(pady=5)
-        # Toggle cho làm nét
         self.switch_sharpening = ctk.CTkSwitch(self, text="Làm nét", variable=self.var_sharpening,
                                              command=self.update_sharpening)
         self.switch_sharpening.pack(pady=5)
-        # Toggle cho giảm nhiễu
         self.switch_denoising = ctk.CTkSwitch(self, text="Giảm nhiễu", variable=self.var_denoising,
                                             command=self.update_denoising)
         self.switch_denoising.pack(pady=5)
-        # Nút để đóng cửa sổ điểm danh (đóng cv2 window bên ngoài cũng sẽ được xử lý trong FacialRecognition)
         self.button_close = ctk.CTkButton(self, text="Đóng điểm danh", command=self.close_attendance)
         self.button_close.pack(pady=10)
 
@@ -564,14 +558,12 @@ class AttendanceWindow(ctk.CTkToplevel):
         FacialRecognition.enable_denoising = self.var_denoising.get()
 
     def run_attendance(self):
-        # Gọi hàm điểm danh từ FacialRecognition (giả sử hàm này nhận tham số: cnx, cursor, camera_source)
         try:
             FacialRecognition.main(self.cnx, self.cursor, self.camera_source)
         except Exception as e:
             print("Lỗi khi chạy điểm danh:", e)
 
     def close_attendance(self):
-        # Giả sử FacialRecognition.main sẽ kết thúc khi cv2.waitKey trả về 'q'
         self.destroy()
 
 def main():
