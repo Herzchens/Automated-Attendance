@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập người dùng - Herz</title>
+  <link rel="stylesheet" href="GUI.css">
+</head>
+<body>
+  <button class="switch-app" onclick="switchToApp()">⇦ App</button>
+
+  <div class="wrapper">
+    <form id="loginForm">
+      <h2>Đăng nhập</h2>
+
+      <div class="input-field">
+        <input type="text" id="username" name="username" required placeholder=" ">
+        <label for="username">Tên đăng nhập</label>
+      </div>
+      <div class="input-field">
+        <input type="password" id="password" name="password" required placeholder=" ">
+        <label for="password">Mật khẩu</label>
+      </div>
+      <div class="input-field">
+        <select id="language" name="language" required>
+          <option value="Tiếng Việt" selected>Tiếng Việt</option>
+          <option value="English">English</option>
+        </select>
+        <label for="language">Ngôn ngữ</label>
+      </div>
+
+      <div class="options-row">
+        <div class="remember">
+          <label for="remember">
+            <input type="checkbox" id="remember">
+            <span>Nhớ đăng nhập</span>
+          </label>
+        </div>
+        <div class="register">
+          <a href="#" id="register">Đăng ký</a>
+        </div>
+      </div>
+
+      <button type="submit">Đăng nhập</button>
+      <hr class="divider">
+      <div class="forget">
+        <a href="#" id="forgetPassword">Quên mật khẩu?</a>
+      </div>
+    </form>
+  </div>
+  <script src="GUI.js?v2"></script>
+</body>
+</html>
