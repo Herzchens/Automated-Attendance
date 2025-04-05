@@ -168,7 +168,7 @@ class AdminControlPanel(ctk.CTk):
             self.fetch_data()
             return
 
-        query = "SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh FROM Students WHERE LOWER(HoVaTen) LIKE %s ORDER BY HoVaTen ASC"
+        query = "SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh FROM facial_recognition.Students WHERE LOWER(HoVaTen) LIKE %s ORDER BY HoVaTen ASC"
         try:
             self.cursor.execute(query, (f"%{keyword}%",))
             rows = self.cursor.fetchall()
