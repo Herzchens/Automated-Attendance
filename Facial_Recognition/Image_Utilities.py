@@ -262,15 +262,6 @@ class EdgeEnhancement:
             raise ValueError("Phương pháp edge detection không được hỗ trợ")
 
     @staticmethod
-    def local_contrast_enhancement(image, clipLimit=2.0, tileGridSize=(8,8)):
-        clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
-        if len(image.shape) == 2:
-            return clahe.apply(image)
-        ycrcb = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
-        ycrcb[:,:,0] = clahe.apply(ycrcb[:,:,0])
-        return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
-
-    @staticmethod
     def gradient_domain_processing(image):
         grad = sobel(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
         grad = cv2.normalize(grad, None, 0, 255, cv2.NORM_MINMAX)

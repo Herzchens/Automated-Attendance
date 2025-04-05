@@ -84,7 +84,7 @@ def stabilize_frame(prev_gray, curr_gray, curr_frame):
 def train_from_db(cursor, model_save_path=None, n_neighbors=None, knn_algo='ball_tree', verbose=False):
     X = []
     y = []
-    query = "SELECT HoVaTen, ImagePath FROM Students"
+    query = "SELECT HoVaTen, ImagePath FROM students"
     cursor.execute(query)
     results = cursor.fetchall()
     if verbose:

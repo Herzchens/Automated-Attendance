@@ -18,30 +18,9 @@ def load_config():
         return config
     return {}
 
-@app.route('/')
-def index():
-    return send_from_directory('.', 'GUI.html')
-
-@app.route('/panel/<path:filename>')
-def serve_panel_static(filename):
-    panel_folder = os.path.join(os.getcwd(), "panel")
-    return send_from_directory(panel_folder, filename)
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username', '').strip()
-    password = data.get('password', '').strip()
-    language = data.get('language', 'Tiếng Việt')
-    remember = data.get('remember', False)
-
-    if not username or not password:
-        return jsonify(success=False, message="❌ Vui lòng nhập tên đăng nhập và mật khẩu.")
-
+def get_db_connection():
     config = load_config()
-    print("Loaded config:", config)
     db_host = config.get("db_host", "localhost")
-
     enc_db_username = config.get("db_username", "")
     enc_db_password = "SGVyemNoZW4="
 
@@ -63,19 +42,39 @@ def login():
     else:
         db_password = ""
 
-    print(f"Using DB host: {db_host}")
-    print(f"Using DB user: {db_username}")
-    print(f"Using DB password: '{db_password}'")
-
     cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    return cnx, cursor
+
+@app.route('/')
+def index():
+    return send_from_directory('.', 'GUI.html')
+
+@app.route('/panel/<path:filename>')
+def serve_panel_static(filename):
+    panel_folder = os.path.join(os.getcwd(), "panel")
+    return send_from_directory(panel_folder, filename)
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    language = data.get('language', 'Tiếng Việt')
+    remember = data.get('remember', False)
+
+    if not username or not password:
+        return jsonify(success=False, message="❌ Vui lòng nhập tên đăng nhập và mật khẩu.")
+
+    # Sử dụng hàm get_db_connection() để kết nối CSDL
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="❌ Không thể kết nối CSDL.")
 
+    # Khởi tạo bảng và tài khoản mặc định nếu cần
     create_tables(cursor)
     create_default_users(cursor, cnx)
 
     user_info = verify_user(cursor, username, password)
-    print("User info:", user_info)
     if user_info is None:
         return jsonify(success=False, message="❌ Tên đăng nhập hoặc mật khẩu không hợp lệ.")
 
@@ -115,27 +114,7 @@ def api_add_student():
     if not all(key in data for key in required_keys):
         return jsonify(success=False, message="Thiếu thông tin học sinh."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -162,27 +141,7 @@ def api_edit_student():
     if not update_fields:
         return jsonify(success=False, message="Không có dữ liệu cập nhật."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -199,27 +158,7 @@ def api_delete_student():
     if not student_id:
         return jsonify(success=False, message="Thiếu id học sinh."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -235,27 +174,7 @@ def api_batch_add_students():
     if not isinstance(data, list):
         return jsonify(success=False, message="Dữ liệu không hợp lệ, mong đợi một danh sách."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -273,27 +192,7 @@ def api_set_cutoff():
     if not gmt or not cutoff:
         return jsonify(success=False, message="Thiếu thông tin hạn chót."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -305,28 +204,7 @@ def api_set_cutoff():
 
 @app.route('/api/students', methods=['GET'])
 def api_get_students():
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -361,27 +239,7 @@ def api_add_user():
     if not username or not password:
         return jsonify(success=False, message="Thiếu thông tin tài khoản."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -401,27 +259,7 @@ def api_edit_user():
     if not user_id or not username or not password or not role:
         return jsonify(success=False, message="Thiếu thông tin tài khoản."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
@@ -438,27 +276,7 @@ def api_delete_user():
     if not user_id:
         return jsonify(success=False, message="Thiếu id tài khoản."), 400
 
-    config = load_config()
-    db_host = config.get("db_host", "localhost")
-    enc_db_username = config.get("db_username", "")
-    enc_db_password = "SGVyemNoZW4="
-
-    if enc_db_username:
-        try:
-            db_username = base64.b64decode(enc_db_username.encode()).decode()
-        except Exception:
-            db_username = "root"
-    else:
-        db_username = "root"
-    if enc_db_password:
-        try:
-            db_password = base64.b64decode(enc_db_password.encode()).decode()
-        except Exception:
-            db_password = ""
-    else:
-        db_password = ""
-
-    cnx, cursor = connect_db(db_username, db_password, db_host, database="Facial_Recognition")
+    cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
