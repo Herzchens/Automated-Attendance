@@ -5,15 +5,15 @@ A Python-based **Automatic Attendance System** using Facial Recognition 🧠
 ---
 
 ## 📚 Table of Contents
-- [📌 Introduction](#-introduction)
-- [✨ Features](#-features)
-- [🚀 Getting Started](#-getting-started)
-- [⚙️ Usage](#-usage)
-- [🧰 Technologies Used](#-technologies-used)
-- [📦 Installation](#-installation)
-- [🤝 Contributing](#-contributing)
-- [🪪 License](#-license)
-- [⚠️ Notes](#-notes)
+- 📌 [Introduction](#-introduction)
+- ✨ [Features](#-features)
+- 🚀 [Getting Started](#-getting-started)
+- ⚙️ [Usage](#-usage)
+- 🧰 [Technologies Used](#-technologies-used)
+- 📦 [Installation](#-installation)
+- 🤝 [Contributing](#-contributing)
+- 🪪 [License](#-license)
+- ⚠️ [Notes](#-notes)
 
 ---
 
