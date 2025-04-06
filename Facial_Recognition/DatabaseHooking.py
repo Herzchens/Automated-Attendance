@@ -1,3 +1,5 @@
+import traceback
+
 import mysql.connector
 from mysql.connector import errorcode
 import os, time, random, datetime
@@ -72,6 +74,7 @@ def create_default_users(cursor, cnx):
         cnx.commit()
 
 def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath, DiemDanhStatus='❌', ThoiGianDiemDanh=None):
+    # Lưu ý: Gender đang được gán cứng là 'Nam'. Nếu cần cho nữ, cần bổ sung tham số.
     sql = """
     INSERT INTO Students (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath)
     VALUES (%s, %s, %s, %s, 'Nam', %s, %s, %s)
@@ -124,9 +127,8 @@ def get_all_students(cursor):
     """)
     return cursor.fetchall()
 
-
 def get_students_for_ui(cursor):
-    cursor.execute ("""
+    cursor.execute("""
         SELECT UID, HoVaTen, Lop, Gender, NgaySinh, DiemDanhStatus, ThoiGianDiemDanh
         FROM Students
     """)
@@ -166,16 +168,31 @@ def export_students_list(cursor, language):
             filetypes=[("Excel files", "*.xlsx")],
             title="Save as" if language=="English" else "Lưu dưới dạng"
         )
+
         if file_path:
             wb = Workbook()
             ws = wb.active
+            ws.title = "DanhSachHocSinh"
             ws.append(["ID", "HoVaTen", "Lop", "DiemDanhStatus", "ThoiGianDiemDanh"])
+
             for row in rows:
-                ws.append(list(row))
+                fixed_row = []
+                for cell in row:
+                    if cell is None:
+                        fixed_row.append("")
+                    elif isinstance(cell, datetime.datetime):
+                        fixed_row.append(cell.strftime("%Y-%m-%d %H:%M:%S"))
+                    else:
+                        fixed_row.append(str(cell))  # đảm bảo là string
+                ws.append(fixed_row)
+
             wb.save(file_path)
+            wb.close()  # <- Đảm bảo workbook được đóng
             messagebox.showinfo("Info", "Exported successfully." if language=="English" else "Xuất dữ liệu thành công.")
+
     except Exception as e:
-        messagebox.showerror("Error", str(e))
+        error_message = traceback.format_exc()
+        messagebox.showerror("Error", f"{str(e)}\n\n{error_message}")
 
 def update_cutoff_time(cnx, cursor, gmt, cutoff):
     value = f"{gmt} {cutoff}"
@@ -193,7 +210,6 @@ def update_cutoff_time(cnx, cursor, gmt, cutoff):
     """
     cursor.execute(query, (value, value))
     cnx.commit()
-
 
 def set_cutoff_time(language, cnx, cursor):
     global CUTOFF_TIME
@@ -230,7 +246,6 @@ def set_cutoff_time(language, cnx, cursor):
     except Exception as e:
         messagebox.showerror("Error", f"Error setting cutoff time: {e}")
         return None
-
 
 def calculate_attendance_status(attendance_time, language):
     if attendance_time is None:

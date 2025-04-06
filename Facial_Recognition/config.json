@@ -16,9 +16,5 @@
     "camera_user": "",
     "camera_pass": "",
     "camera_ip": "",
-    "camera_port": "",
-    "enable_super_resolution": false,
-    "enable_color_balance": false,
-    "enable_sharpening": true,
-    "enable_denoising": true
+    "camera_port": ""
 }

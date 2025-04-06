@@ -116,17 +116,18 @@ header button {
 }
 
 table {
-    table-layout: fixed;
-    width: 100%;
-}
-table th, table td {
-    padding: 8px;
-    font-size: 14px;
-    text-align: center;
-    white-space: normal;
-    word-wrap: break-word;
+  table-layout: fixed;
+  width: 100%;
 }
 
+table th,
+table td {
+  padding: 8px;
+  font-size: 14px;
+  text-align: center;
+  white-space: normal;
+  word-wrap: break-word;
+}
 
 table th {
   background-color: #333;
@@ -215,78 +216,90 @@ table th {
 }
 
 @media (max-width: 768px) {
-  table th, table td {
+  table th,
+  table td {
     padding: 8px;
     font-size: 14px;
   }
-  .controls button, .search-bar input, .search-bar button {
+  .controls button,
+  .search-bar input,
+  .search-bar button {
     font-size: 14px;
     padding: 8px 12px;
   }
 }
 
 .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 400px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      position: relative;
-    }
-    .modal-content label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    .modal-content input[type="text"],
-    .modal-content input[type="date"],
-    .modal-content input[type="file"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .modal-header {
-      font-size: 22px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    .modal-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    .modal-buttons button {
-      width: 45%;
-      padding: 8px;
-      font-size: 14px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .btn-save {
-      background-color: #4CAF50;
-      color: white;
-    }
-    .btn-cancel {
-      background-color: #f44336;
-      color: white;
-    }
-    #students-table tr.selected-row td {
-      background-color: #d3e0f0 !important;
-    }
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.modal-header {
+  font-size: 22px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  width: 45%;
+  padding: 8px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-save {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.btn-cancel {
+  background-color: #f44336;
+  color: white;
+}
+
+#students-table tr.selected-row td {
+  background-color: #d3e0f0 !important;
+}

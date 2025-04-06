@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 import subprocess
 import json, os, base64
+from datetime import datetime
+from io import BytesIO
 from DatabaseHooking import (
     connect_db, create_tables, create_default_users, verify_user,
-    add_student, update_student, remove_student, add_students_batch,
-    update_cutoff_time, add_user, update_user, remove_user, get_all_users,
-    export_students_list, calculate_attendance_status, get_all_students, get_students_for_ui
+    add_student, update_student, add_students_batch, update_cutoff_time,
+    add_user, update_user, remove_user, get_all_users,
+    export_students_list, calculate_attendance_status, get_students_for_ui
 )
 
 app = Flask(__name__, static_folder='.', static_url_path='')
@@ -65,12 +67,10 @@ def login():
     if not username or not password:
         return jsonify(success=False, message="❌ Vui lòng nhập tên đăng nhập và mật khẩu.")
 
-    # Sử dụng hàm get_db_connection() để kết nối CSDL
     cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="❌ Không thể kết nối CSDL.")
 
-    # Khởi tạo bảng và tài khoản mặc định nếu cần
     create_tables(cursor)
     create_default_users(cursor, cnx)
 
@@ -151,19 +151,24 @@ def api_edit_student():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
+def remove_student_by_uid(cursor, cnx, UID):
+    sql = "DELETE FROM Students WHERE UID=%s"
+    cursor.execute(sql, (UID,))
+    cnx.commit()
+
 @app.route('/api/delete_student', methods=['POST'])
 def api_delete_student():
     data = request.get_json()
-    student_id = data.get('id')
-    if not student_id:
-        return jsonify(success=False, message="Thiếu id học sinh."), 400
+    UID = data.get('UID')
+    if not UID:
+        return jsonify(success=False, message="Thiếu UID học sinh."), 400
 
     cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
     try:
-        remove_student(cursor, cnx, student_id)
+        remove_student_by_uid(cursor, cnx, UID)
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
@@ -171,15 +176,17 @@ def api_delete_student():
 @app.route('/api/batch_add_students', methods=['POST'])
 def api_batch_add_students():
     data = request.get_json()
-    if not isinstance(data, list):
-        return jsonify(success=False, message="Dữ liệu không hợp lệ, mong đợi một danh sách."), 400
+    # Ở đây, data nên là đường dẫn đến thư mục chứa ảnh (một chuỗi)
+    if not isinstance(data, str) and not isinstance(data, list):
+        return jsonify(success=False, message="Dữ liệu không hợp lệ, mong đợi đường dẫn (string) hoặc danh sách."), 400
 
+    folder = data if isinstance(data, str) else data[0]
     cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
     try:
-        added_count = add_students_batch(cursor, cnx, language="Tiếng Việt", folder=data)
+        added_count = add_students_batch(cursor, cnx, language="Tiếng Việt", folder=folder)
         return jsonify(success=True, added_count=added_count)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
@@ -211,8 +218,15 @@ def api_get_students():
     try:
         students = get_students_for_ui(cursor)
         student_list = []
-
         for index, s in enumerate(students, start=1):
+            # Chuyển đổi ThoiGianDiemDanh chỉ hiển thị HH:MM:SS (nếu có)
+            time_str = ""
+            if s[6]:
+                try:
+                    dt = datetime.fromisoformat(s[6])
+                    time_str = dt.strftime("%H:%M:%S")
+                except Exception:
+                    time_str = s[6]
             student_list.append({
                 "STT": index,
                 "UID": s[0],
@@ -221,9 +235,8 @@ def api_get_students():
                 "Gender": s[3],
                 "NgaySinh": s[4],
                 "DiemDanhStatus": s[5],
-                "ThoiGianDiemDanh": s[6]
+                "ThoiGianDiemDanh": time_str
             })
-
         return jsonify(success=True, students=student_list)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
@@ -283,6 +296,58 @@ def api_delete_user():
     try:
         remove_user(cursor, cnx, user_id)
         return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+# ==================== Endpoint Render Danh sách User ====================
+@app.route('/api/users', methods=['GET'])
+def api_get_users():
+    cnx, cursor = get_db_connection()
+    if cnx is None:
+        return jsonify(success=False, message="Không thể kết nối CSDL"), 500
+    try:
+        users = get_all_users(cursor)
+        user_list = []
+        for user in users:
+            user_list.append({
+                "id": user[0],
+                "username": user[1],
+                "role": user[2]
+            })
+        return jsonify(success=True, users=user_list)
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+# ==================== Endpoint Xuất danh sách học sinh dưới dạng Excel ====================
+@app.route('/api/export_students_excel', methods=['GET'])
+def api_export_students_excel():
+    cnx, cursor = get_db_connection()
+    if cnx is None:
+        return jsonify(success=False, message="Không thể kết nối CSDL"), 500
+    try:
+        wb = export_students_list(cursor)
+        filename = datetime.now().strftime("%d_%m_%Y") + ".xlsx"
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return send_file(
+            output,
+            download_name=filename,  # ✅ Dùng tham số đúng
+            as_attachment=True,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+# ==================== Endpoint Calculate Attendance Status ====================
+@app.route('/api/calculate_attendance_status', methods=['GET'])
+def api_calculate_attendance_status():
+    cnx, cursor = get_db_connection()
+    if cnx is None:
+        return jsonify(success=False, message="Không thể kết nối CSDL"), 500
+    try:
+        result = calculate_attendance_status(cursor)
+        return jsonify(success=True, result=result)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
