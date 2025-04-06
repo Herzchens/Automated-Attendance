@@ -94,7 +94,7 @@ Feel free to:
 > For big changes, open an issue first to discuss your ideas.
 
 🔗 **Repository:** [Herzchens/Automated-Attendance](https://github.com/Herzchens/Automated-Attendance)  
-💬 **Contact Me on Discord:** [discord.com/users/984085171408080897](https://discord.com/users/984085171408080897)
+💬 **Contact Me on Discord:** [itztli_herzchen](https://discord.com/users/984085171408080897)
 
 ---
 
