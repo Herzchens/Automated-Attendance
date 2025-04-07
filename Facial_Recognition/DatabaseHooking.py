@@ -73,14 +73,18 @@ def create_default_users(cursor, cnx):
             cursor.execute(sql, user)
         cnx.commit()
 
-def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, ImagePath, DiemDanhStatus='❌', ThoiGianDiemDanh=None):
-    # Lưu ý: Gender đang được gán cứng là 'Nam'. Nếu cần cho nữ, cần bổ sung tham số.
+def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, Gender, ImagePath, DiemDanhStatus='❌', ThoiGianDiemDanh=None):
+    # Kiểm tra giới tính hợp lệ
+    if Gender not in ["Nam", "Nữ"]:
+        raise ValueError("Giới tính phải là 'Nam' hoặc 'Nữ'")
+
     sql = """
     INSERT INTO Students (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath)
-    VALUES (%s, %s, %s, %s, 'Nam', %s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
-    cursor.execute(sql, (UID, HoVaTen, NgaySinh, Lop, DiemDanhStatus, ThoiGianDiemDanh, ImagePath))
+    cursor.execute(sql, (UID, HoVaTen, NgaySinh, Lop, Gender, DiemDanhStatus, ThoiGianDiemDanh, ImagePath))
     cnx.commit()
+
 
 def update_student(cursor, cnx, student_id, UID=None, HoVaTen=None, NgaySinh=None, Lop=None, Gender=None, ImagePath=None):
     updates = []
@@ -150,49 +154,60 @@ def update_attendance(cursor, cnx, student_id, status, time):
     cursor.execute(sql, (status, time, int(student_id)))
     cnx.commit()
 
-def export_students_list(cursor, language):
+def export_students_list(cursor, language, save_to_file=True):
     try:
         query = """
-            SELECT id, HoVaTen, Lop, DiemDanhStatus, ThoiGianDiemDanh
+            SELECT UID, HoVaTen, Lop, Gender, NgaySinh, DiemDanhStatus, ThoiGianDiemDanh
             FROM Students
             ORDER BY id
         """
         cursor.execute(query)
         rows = cursor.fetchall()
         if not rows:
-            messagebox.showinfo("Info", "No data to export." if language=="English" else "Không có dữ liệu để xuất.")
-            return
+            if save_to_file:
+                messagebox.showinfo("Info", "No data to export." if language=="English" else "Không có dữ liệu để xuất.")
+            else:
+                raise Exception("Không có dữ liệu để xuất.")
+            return None
 
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".xlsx",
-            filetypes=[("Excel files", "*.xlsx")],
-            title="Save as" if language=="English" else "Lưu dưới dạng"
-        )
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "DanhSachHocSinh"
+        # Đặt header theo yêu cầu
+        header = ["STT", "UID", "Họ Và Tên", "Lớp", "Giới Tính", "Ngày Sinh", "Trạng Thái", "Thời Gian"]
+        ws.append(header)
 
-        if file_path:
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "DanhSachHocSinh"
-            ws.append(["ID", "HoVaTen", "Lop", "DiemDanhStatus", "ThoiGianDiemDanh"])
+        # Duyệt các dòng dữ liệu, thêm số thứ tự tự động (STT)
+        for index, row in enumerate(rows):
+            fixed_row = [str(index + 1)]  # STT: số thứ tự
+            for cell in row:
+                if cell is None:
+                    fixed_row.append("")
+                elif isinstance(cell, datetime.datetime):
+                    fixed_row.append(cell.strftime("%Y-%m-%d %H:%M:%S"))
+                else:
+                    fixed_row.append(str(cell))
+            ws.append(fixed_row)
 
-            for row in rows:
-                fixed_row = []
-                for cell in row:
-                    if cell is None:
-                        fixed_row.append("")
-                    elif isinstance(cell, datetime.datetime):
-                        fixed_row.append(cell.strftime("%Y-%m-%d %H:%M:%S"))
-                    else:
-                        fixed_row.append(str(cell))  # đảm bảo là string
-                ws.append(fixed_row)
-
-            wb.save(file_path)
-            wb.close()  # <- Đảm bảo workbook được đóng
-            messagebox.showinfo("Info", "Exported successfully." if language=="English" else "Xuất dữ liệu thành công.")
+        if save_to_file:
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".xlsx",
+                filetypes=[("Excel files", "*.xlsx")],
+                title="Save as" if language=="English" else "Lưu dưới dạng"
+            )
+            if file_path:
+                wb.save(file_path)
+                wb.close()  # Đảm bảo workbook được đóng
+                messagebox.showinfo("Info", "Exported successfully." if language=="English" else "Xuất dữ liệu thành công.")
+        else:
+            return wb
 
     except Exception as e:
         error_message = traceback.format_exc()
-        messagebox.showerror("Error", f"{str(e)}\n\n{error_message}")
+        if save_to_file:
+            messagebox.showerror("Error", f"{str(e)}\n\n{error_message}")
+        else:
+            raise e
 
 def update_cutoff_time(cnx, cursor, gmt, cutoff):
     value = f"{gmt} {cutoff}"

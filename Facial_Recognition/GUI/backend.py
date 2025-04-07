@@ -110,18 +110,27 @@ def switch_app():
 @app.route('/api/add_student', methods=['POST'])
 def api_add_student():
     data = request.get_json()
-    required_keys = ['UID', 'HoVaTen', 'NgaySinh', 'Lop', 'ImagePath']
+    required_keys = ['UID', 'HoVaTen', 'NgaySinh', 'Lop', 'Gender', 'ImagePath']
     if not all(key in data for key in required_keys):
         return jsonify(success=False, message="Thiếu thông tin học sinh."), 400
+
+    if data['Gender'] not in ['Nam', 'Nữ']:
+        return jsonify(success=False, message="Giới tính phải là 'Nam' hoặc 'Nữ'."), 400
 
     cnx, cursor = get_db_connection()
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
     try:
-        add_student(cursor, cnx,
-                    data['UID'], data['HoVaTen'], data['NgaySinh'],
-                    data['Lop'], data['ImagePath'])
+        add_student(
+            cursor, cnx,
+            data['UID'],
+            data['HoVaTen'],
+            data['NgaySinh'],
+            data['Lop'],
+            data['Gender'],
+            data['ImagePath']
+        )
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
@@ -147,7 +156,25 @@ def api_edit_student():
 
     try:
         update_student(cursor, cnx, student_id, **update_fields)
-        return jsonify(success=True)
+        cursor.execute(
+            "SELECT id, UID, HoVaTen, NgaySinh, Lop, Gender, ImagePath FROM Students WHERE id=%s",
+            (student_id,)
+        )
+        student = cursor.fetchone()
+        if student:
+            updated_student = {
+                "id": student[0],
+                "UID": student[1],
+                "HoVaTen": student[2],
+                "NgaySinh": student[3].strftime("%Y-%m-%d") if isinstance(student[3], (datetime,)) else student[3],
+                "Lop": student[4],
+                "Gender": student[5],
+                "ImagePath": student[6],
+            }
+        else:
+            updated_student = None
+
+        return jsonify(success=True, student=updated_student)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
@@ -176,7 +203,6 @@ def api_delete_student():
 @app.route('/api/batch_add_students', methods=['POST'])
 def api_batch_add_students():
     data = request.get_json()
-    # Ở đây, data nên là đường dẫn đến thư mục chứa ảnh (một chuỗi)
     if not isinstance(data, str) and not isinstance(data, list):
         return jsonify(success=False, message="Dữ liệu không hợp lệ, mong đợi đường dẫn (string) hoặc danh sách."), 400
 
@@ -219,7 +245,6 @@ def api_get_students():
         students = get_students_for_ui(cursor)
         student_list = []
         for index, s in enumerate(students, start=1):
-            # Chuyển đổi ThoiGianDiemDanh chỉ hiển thị HH:MM:SS (nếu có)
             time_str = ""
             if s[6]:
                 try:
@@ -238,6 +263,37 @@ def api_get_students():
                 "ThoiGianDiemDanh": time_str
             })
         return jsonify(success=True, students=student_list)
+    except Exception as e:
+        return jsonify(success=False, message=str(e)), 500
+
+# ==================== Endpoint Tìm kiếm Học sinh ====================
+@app.route('/api/search_student', methods=['GET'])
+def api_search_student():
+    query = request.args.get('query', '').strip()
+    if not query:
+        return jsonify(success=False, message="Thiếu thông tin tìm kiếm."), 400
+
+    cnx, cursor = get_db_connection()
+    if cnx is None:
+        return jsonify(success=False, message="Không thể kết nối CSDL"), 500
+
+    try:
+        # Lấy tất cả học sinh qua phương thức get_students_for_ui
+        all_students = get_students_for_ui(cursor)
+        filtered = []
+        # s: (UID, HoVaTen, Lop, Gender, NgaySinh, DiemDanhStatus, ThoiGianDiemDanh)
+        for s in all_students:
+            if s[1].lower().startswith(query.lower()):
+                filtered.append({
+                    "UID": s[0],
+                    "HoVaTen": s[1],
+                    "Lop": s[2],
+                    "Gender": s[3],
+                    "NgaySinh": s[4],
+                    "DiemDanhStatus": s[5],
+                    "ThoiGianDiemDanh": s[6]
+                })
+        return jsonify(success=True, students=filtered)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
@@ -325,14 +381,18 @@ def api_export_students_excel():
     if cnx is None:
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
     try:
-        wb = export_students_list(cursor)
+        wb = export_students_list(cursor, language="Vietnamese", save_to_file=False)
+        if wb is None:
+            return jsonify(success=False, message="Không có dữ liệu để xuất."), 404
+
         filename = datetime.now().strftime("%d_%m_%Y") + ".xlsx"
         output = BytesIO()
         wb.save(output)
         output.seek(0)
+        wb.close()
         return send_file(
             output,
-            download_name=filename,  # ✅ Dùng tham số đúng
+            download_name=filename,
             as_attachment=True,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
