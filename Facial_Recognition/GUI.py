@@ -5,7 +5,6 @@ from DatabaseHooking import connect_db, create_tables, verify_user, create_defau
 from translator import translations
 import FacialRecognition
 
-# --- Hàm load và save cấu hình ---
 def load_config():
     config_file = "config.json"
     default = {
@@ -75,7 +74,6 @@ config = load_config()
 ctk.set_appearance_mode(config.get("theme", "Light"))
 ctk.set_default_color_theme("blue")
 
-# ========= Cửa sổ cấu hình Camera =========
 class CameraConfigWindow(ctk.CTkToplevel):
     def __init__(self, parent, current_camera_types):
         super().__init__(parent)
@@ -105,7 +103,6 @@ class CameraConfigWindow(ctk.CTkToplevel):
             self.parent.combo_camera_type.set(new_camera_types[0])
         self.destroy()
 
-# ========= Form đăng nhập MySQL =========
 class MySQLLoginWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -393,7 +390,6 @@ class MySQLLoginWindow(ctk.CTk):
         self.destroy()
         sys.exit(0)
 
-# ========= Form đăng nhập người dùng =========
 class UserLoginWindow(ctk.CTk):
     def __init__(self, cnx, cursor, language):
         super().__init__()
@@ -508,7 +504,6 @@ class UserLoginWindow(ctk.CTk):
         self.destroy()
         sys.exit(0)
 
-# ========= Cửa sổ điểm danh với các toggle xử lý ảnh =========
 class AttendanceWindow(ctk.CTkToplevel):
     def __init__(self, cnx, cursor, camera_source):
         super().__init__()

@@ -11,15 +11,11 @@
     <header>
       <h1 id="greeting">Chào mừng, SuperUser</h1>
     </header>
-
-    <!-- Tab navigation -->
     <div class="tabview">
       <div class="tabs">
         <button class="tablink active" data-tab="students">Quản lý Học sinh</button>
         <button class="tablink" data-tab="users">Quản lý Tài khoản</button>
       </div>
-
-      <!-- Students -->
       <div id="students" class="tabcontent active">
         <div class="search-bar">
           <label for="search-input"></label>
@@ -33,6 +29,20 @@
           <button id="batch-add">Thêm hàng loạt</button>
           <button id="set-cutoff">Đặt thời hạn điểm danh</button>
           <button id="export-students">Xuất danh sách</button>
+          <div class="sort-wrapper">
+            <button id="sort-students" class="btn-sort">Sắp xếp theo</button>
+            <div id="sort-dropdown" class="sort-dropdown">
+              <ul>
+                <li data-sort="az">A-Z</li>
+                <li data-sort="za">Z-A</li>
+                <li data-sort="uid">UID</li>
+                <li data-sort="gender">Giới Tính</li>
+                <li data-sort="birthday">Ngày Sinh</li>
+                <li data-sort="attendance">Điểm Danh</li>
+                <li data-sort="time">Thời Gian</li>
+              </ul>
+            </div>
+          </div>
         </div>
         <div class="table-container">
           <table id="students-table">
@@ -49,14 +59,11 @@
               </tr>
             </thead>
             <tbody>
-              <!-- Render by JavaScript -->
             </tbody>
           </table>
-          <div id="no-data" class="no-data">Không có dữ liệu</div>
+          <div id="no-data" class="no-data">Không có dữ liệu :(</div>
         </div>
       </div>
-
-      <!-- Users -->
       <div id="users" class="tabcontent">
         <div class="controls">
           <button id="add-user-btn">Thêm người dùng</button>
@@ -73,12 +80,10 @@
               </tr>
             </thead>
             <tbody>
-              <!-- Render by JavaScript -->
             </tbody>
           </table>
           <div id="no-users" class="no-data">Không có dữ liệu</div>
         </div>
-        <!-- Hiển thị thông tin người dùng khi được chọn -->
         <div id="user-detail" class="detail-info" style="display: none;">
           <h3>Thông tin người dùng</h3>
           <p id="detail-username"></p>
@@ -86,15 +91,11 @@
         </div>
       </div>
     </div>
-
     <div class="bottom-controls">
       <button id="logout">Đăng xuất</button>
       <button id="quit">Thoát</button>
     </div>
   </div>
-
-  <!-- Các Popup -->
-  <!-- Popup Thêm Học Sinh -->
   <div id="add-student-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Thêm Học sinh</div>
@@ -114,8 +115,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Chỉnh Sửa Học Sinh -->
   <div id="edit-student-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Chỉnh Sửa Học sinh</div>
@@ -139,8 +138,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Thêm Hàng Loạt Học Sinh -->
   <div id="batch-add-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Thêm Hàng Loạt Học Sinh</div>
@@ -162,8 +159,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Đặt Thời Hạn Điểm Danh -->
   <div id="set-cutoff-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Đặt Thời Hạn Điểm Danh</div>
@@ -181,8 +176,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Thêm Người Dùng -->
   <div id="add-user-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Thêm Người Dùng</div>
@@ -203,8 +196,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Chỉnh Sửa Người Dùng -->
   <div id="edit-user-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Chỉnh Sửa Người Dùng</div>
@@ -225,8 +216,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Popup Xoá Người Dùng -->
   <div id="delete-user-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">Xoá Người Dùng</div>
@@ -237,11 +226,7 @@
       </div>
     </div>
   </div>
-
-  <!-- Notification Popup Container -->
   <div id="notification-container"></div>
-
-  <!-- Import file superuser_panel.js -->
   <script src="js/superuser_panel.js?v2"></script>
 </body>
 </html>

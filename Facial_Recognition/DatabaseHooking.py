@@ -74,7 +74,6 @@ def create_default_users(cursor, cnx):
         cnx.commit()
 
 def add_student(cursor, cnx, UID, HoVaTen, NgaySinh, Lop, Gender, ImagePath, DiemDanhStatus='❌', ThoiGianDiemDanh=None):
-    # Kiểm tra giới tính hợp lệ
     if Gender not in ["Nam", "Nữ"]:
         raise ValueError("Giới tính phải là 'Nam' hoặc 'Nữ'")
 
@@ -173,13 +172,10 @@ def export_students_list(cursor, language, save_to_file=True):
         wb = Workbook()
         ws = wb.active
         ws.title = "DanhSachHocSinh"
-        # Đặt header theo yêu cầu
         header = ["STT", "UID", "Họ Và Tên", "Lớp", "Giới Tính", "Ngày Sinh", "Trạng Thái", "Thời Gian"]
         ws.append(header)
-
-        # Duyệt các dòng dữ liệu, thêm số thứ tự tự động (STT)
         for index, row in enumerate(rows):
-            fixed_row = [str(index + 1)]  # STT: số thứ tự
+            fixed_row = [str(index + 1)]
             for cell in row:
                 if cell is None:
                     fixed_row.append("")
@@ -197,7 +193,7 @@ def export_students_list(cursor, language, save_to_file=True):
             )
             if file_path:
                 wb.save(file_path)
-                wb.close()  # Đảm bảo workbook được đóng
+                wb.close()
                 messagebox.showinfo("Info", "Exported successfully." if language=="English" else "Xuất dữ liệu thành công.")
         else:
             return wb
@@ -304,10 +300,6 @@ def add_students_batch(cursor, cnx, language, folder):
     messagebox.showinfo("Info",
                         f"Đã thêm {added_count} học sinh." if language=="Tiếng Việt" else f"Added {added_count} students.")
     return added_count
-
-############################
-# THAO TÁC VỚI BẢNG USERS
-############################
 def add_user(cursor, cnx, username, password, role="user"):
     sql = "INSERT INTO Users (username, password, role) VALUES (%s, %s, %s)"
     cursor.execute(sql, (username, password, role))

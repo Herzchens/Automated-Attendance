@@ -34,11 +34,9 @@ class SuperUserControlPanel(ctk.CTk):
             pass
         self.resizable(True, True)
 
-        # Tạo các tabs
         self.create_tabs()
         self.create_theme_toggle()
 
-        # Load dữ liệu ban đầu
         self.load_students_data()
         self.load_accounts_data()
 
@@ -46,13 +44,10 @@ class SuperUserControlPanel(ctk.CTk):
         self.tabview = ctk.CTkTabview(self)
         self.tabview.pack(fill="both", expand=True)
 
-        # Thêm 2 tab
         self.tab_students = self.tabview.add(self.trans["students_tab"])
         self.tab_users = self.tabview.add(self.trans["user_accounts_tab"])
 
-        # Tạo giao diện cho tab "Quản lý học sinh"
         self.create_students_widgets(self.tab_students)
-        # Tạo giao diện cho tab "Quản lý tài khoản"
         self.create_users_widgets(self.tab_users)
 
     def create_students_widgets(self, parent):
@@ -60,11 +55,9 @@ class SuperUserControlPanel(ctk.CTk):
         self.label_greeting = ctk.CTkLabel(parent, text=greeting, font=("Arial", 24))
         self.label_greeting.pack(pady=20)
 
-        # Thanh công cụ cho học sinh
         self.student_toolbar = ctk.CTkFrame(parent)
         self.student_toolbar.pack(pady=5, fill="x")
 
-        # Nút "Thêm học sinh"
         self.button_add_student = ctk.CTkButton(
             self.student_toolbar, text=self.trans["add_student"],
             command=lambda: add_student_ui(self, self.cnx, self.cursor, self.language,
@@ -72,35 +65,30 @@ class SuperUserControlPanel(ctk.CTk):
         )
         self.button_add_student.grid(row=0, column=0, padx=10, pady=5)
 
-        # Nút "Chỉnh sửa học sinh"
         self.button_edit_student = ctk.CTkButton(
             self.student_toolbar, text=self.trans["edit_student"],
             command=self.edit_student
         )
         self.button_edit_student.grid(row=0, column=1, padx=10, pady=5)
 
-        # Nút "Xoá học sinh"
         self.button_delete_student = ctk.CTkButton(
             self.student_toolbar, text=self.trans["delete_student"],
             command=self.delete_student
         )
         self.button_delete_student.grid(row=0, column=2, padx=10, pady=5)
 
-        # Nút "Xuất danh sách"
         self.button_export_students = ctk.CTkButton(
             self.student_toolbar, text=self.trans["export"],
             command=lambda: export_students_list(self.cursor, self.language)
         )
         self.button_export_students.grid(row=0, column=3, padx=10, pady=5)
 
-        # Nút "Cài đặt hạn chót" – gọi UI mới với CutoffTimeWindowGMT
         self.button_cutoff = ctk.CTkButton(
             self.student_toolbar, text=self.trans["set_cutoff"],
             command=lambda: CutoffTimeWindowGMT(self, self.cnx, self.cursor, self.language)
         )
         self.button_cutoff.grid(row=0, column=4, padx=10, pady=5)
 
-        # Nút "Thêm hàng loạt"
         self.button_batch_add = ctk.CTkButton(
             self.student_toolbar, text=self.trans["batch_add"],
             command=lambda: add_students_batch_ui(self, self.cnx, self.cursor, self.language,
@@ -108,7 +96,6 @@ class SuperUserControlPanel(ctk.CTk):
         )
         self.button_batch_add.grid(row=0, column=5, padx=10, pady=5)
 
-        # Bảng hiển thị học sinh
         self.students_table = CustomTable(
             parent,
             columns=[self.trans["col_index"], self.trans["col_name"], "Lớp", self.trans["col_attendance"]],
@@ -116,7 +103,6 @@ class SuperUserControlPanel(ctk.CTk):
         )
         self.students_table.pack(fill="both", expand=True)
 
-        # Khung tìm kiếm
         self.search_frame = ctk.CTkFrame(parent)
         self.search_frame.pack(pady=10)
         self.search_entry = ctk.CTkEntry(self.search_frame, placeholder_text=self.trans["search"])
@@ -124,7 +110,6 @@ class SuperUserControlPanel(ctk.CTk):
         self.search_button = ctk.CTkButton(self.search_frame, text=self.trans["search"], command=self.search_student)
         self.search_button.pack(side="left", padx=10)
 
-        # Thanh nút dưới cùng: Logout, Quit
         self.frame_buttons_bottom = ctk.CTkFrame(parent)
         self.frame_buttons_bottom.pack(pady=10)
         self.button_logout = ctk.CTkButton(
@@ -146,7 +131,6 @@ class SuperUserControlPanel(ctk.CTk):
         label_accounts = ctk.CTkLabel(parent, text=self.trans["user_accounts_tab"], font=("Arial", 24))
         label_accounts.pack(pady=20)
 
-        # Thanh công cụ cho tài khoản
         self.accounts_toolbar = ctk.CTkFrame(parent)
         self.accounts_toolbar.pack(pady=5, fill="x")
 
@@ -168,7 +152,6 @@ class SuperUserControlPanel(ctk.CTk):
         )
         self.button_delete_user.grid(row=0, column=2, padx=10, pady=5)
 
-        # Bảng hiển thị tài khoản
         self.users_table = CustomTable(
             parent,
             columns=[self.trans["col_index"], self.trans["username"], "Role"],
@@ -294,7 +277,6 @@ class SuperUserControlPanel(ctk.CTk):
                     attendance = '✖'
                 self.students_table.add_row((idx, row[1], row[2], attendance))
 
-    # =============== Phần quản lý tài khoản ===============
     def load_accounts_data(self):
         query = "SELECT id, username, role FROM Users ORDER BY id"
         try:
@@ -380,8 +362,6 @@ class SuperUserControlPanel(ctk.CTk):
             return
         if delete_user_operation(self.cursor, self.cnx, account, self.language):
             self.load_accounts_data()
-
-    # =============== Các hàm Logout, Quit ===============
     def logout(self):
         self.destroy()
 
