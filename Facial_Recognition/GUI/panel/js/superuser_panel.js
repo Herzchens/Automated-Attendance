@@ -1,42 +1,37 @@
-function showNotification(type, message) {
-  const container = document.getElementById("notification-container");
-  const notif = document.createElement("div");
-  notif.className = "notification show";
-  const icon = document.createElement("span");
-  icon.style.fontSize = "24px";
-  icon.style.marginRight = "10px";
-  icon.textContent = type === "success" ? "✔️" : "❌";
-  const msg = document.createElement("span");
-  msg.className = "notification-message";
-  msg.textContent = message;
-  notif.appendChild(icon);
-  notif.appendChild(msg);
-  container.appendChild(notif);
-  setTimeout(() => {
-    notif.classList.remove("show");
-    container.removeChild(notif);
-  }, 3000);
-}
-
-function openModal(id) {
-  document.getElementById(id).style.display = "block";
-}
-
-function closeModal(id) {
-  document.getElementById(id).style.display = "none";
-}
-
-function autofillFromFilename(filename, nameFieldId, classFieldId) {
-  const nameField = document.getElementById(nameFieldId);
-  const classField = document.getElementById(classFieldId);
-  const parts = filename.split('_');
-  if (parts.length >= 2) {
-    nameField.value = parts[0];
-    classField.value = parts[1].split('.')[0];
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  let studentsData = [];
+  let currentSort = "az";
+
+  function sortStudents(array, sortParam) {
+    let sorted = [...array];
+    switch (sortParam) {
+      case "az":
+        sorted.sort((a, b) => a.HoVaTen.localeCompare(b.HoVaTen));
+        break;
+      case "za":
+        sorted.sort((a, b) => b.HoVaTen.localeCompare(a.HoVaTen));
+        break;
+      case "uid":
+        sorted.sort((a, b) => a.UID.localeCompare(b.UID));
+        break;
+      case "gender":
+        sorted.sort((a, b) => a.Gender.localeCompare(b.Gender));
+        break;
+      case "birthday":
+        sorted.sort((a, b) => new Date(a.NgaySinh) - new Date(b.NgaySinh));
+        break;
+      case "attendance":
+        sorted.sort((a, b) => a.DiemDanhStatus.localeCompare(b.DiemDanhStatus));
+        break;
+      case "time":
+        sorted.sort((a, b) => (a.ThoiGianDiemDanh || "").localeCompare(b.ThoiGianDiemDanh || ""));
+        break;
+      default:
+        break;
+    }
+    return sorted;
+  }
+
   const tablinks = document.querySelectorAll('.tablink');
   const tabcontents = document.querySelectorAll('.tabcontent');
   tablinks.forEach(btn => {
@@ -114,7 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
       fetch('/api/students')
         .then(response => response.json())
         .then(data => {
-          if (data.success) callback(data.students);
+          if (data.success) {
+            studentsData = data.students;
+            callback(sortStudents(studentsData, currentSort));
+          }
           else showNotification("error", "Lỗi khi lấy danh sách học sinh: " + data.message);
         })
         .catch(err => showNotification("error", "Lỗi kết nối: " + err));
@@ -150,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('edit-Gender').value = student.Gender;
             document.getElementById('edit-NgaySinh').value = student.NgaySinh;
             document.getElementById('edit-ImagePath').value = student.ImagePath;
-
             let preview = document.getElementById('edit-image-preview');
             if (student.ImagePath) {
               preview.src = student.ImagePath;
@@ -158,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
               preview.style.display = "none";
             }
-
             showNotification("success", "Chỉnh sửa học sinh thành công!");
             callback();
           } else {
@@ -283,12 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Sự kiện cho nút xuất danh sách học sinh
   document.getElementById("export-students").addEventListener("click", () => {
     PanelFunctions.exportStudents();
   });
 
-  // Xử lý sự kiện cho tìm kiếm học sinh
   document.getElementById("search-button").addEventListener("click", () => {
     const query = document.getElementById("search-input").value.trim();
     if (query) {
@@ -296,14 +290,17 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            renderStudents(data.students);
+            studentsData = data.students;
+            renderStudents(sortStudents(studentsData, currentSort));
           } else {
             showNotification("error", "Lỗi khi tìm kiếm: " + data.message);
           }
         })
         .catch(err => showNotification("error", "Lỗi kết nối: " + err));
     } else {
-      PanelFunctions.fetchStudents(renderStudents);
+      PanelFunctions.fetchStudents((students) => {
+        renderStudents(students);
+      });
     }
   });
 
@@ -326,7 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (files.length > 0) {
       const folderName = files[0].webkitRelativePath.split("/")[0];
       PanelFunctions.batchAddStudents(folderName, () => {
-        PanelFunctions.fetchStudents(renderStudents);
+        PanelFunctions.fetchStudents((students) => {
+          renderStudents(sortStudents(students, currentSort));
+        });
         closeModal("batch-add-modal");
       });
     } else {
@@ -376,7 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const UID = Date.now().toString() + Math.floor(Math.random() * 900 + 100).toString();
     if (imagePath && HoVaTen && Lop && Gender && NgaySinh) {
       PanelFunctions.addStudent({ UID, HoVaTen, NgaySinh, Lop, Gender, ImagePath: imagePath }, () => {
-        PanelFunctions.fetchStudents(renderStudents);
+        PanelFunctions.fetchStudents((students) => {
+          renderStudents(sortStudents(students, currentSort));
+        });
         closeModal("add-student-modal");
       });
     } else {
@@ -412,7 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const NgaySinh = document.getElementById("edit-NgaySinh").value;
     if (imagePath && HoVaTen && Lop && Gender && NgaySinh) {
       PanelFunctions.editStudent(selectedStudent.id, { HoVaTen, Lop, Gender, NgaySinh, ImagePath: imagePath }, () => {
-        PanelFunctions.fetchStudents(renderStudents);
+        PanelFunctions.fetchStudents((students) => {
+          renderStudents(sortStudents(students, currentSort));
+        });
         closeModal("edit-student-modal");
       });
     } else {
@@ -428,7 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (confirm("Bạn có chắc muốn xoá học sinh có UID " + selectedStudent.UID + "?")) {
       PanelFunctions.deleteStudent(selectedStudent.UID, () => {
-        PanelFunctions.fetchStudents(renderStudents);
+        PanelFunctions.fetchStudents((students) => {
+          renderStudents(sortStudents(students, currentSort));
+        });
       });
     }
   });
@@ -507,5 +512,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm("Bạn có chắc muốn thoát?")) window.close();
   });
 
-  PanelFunctions.fetchStudents(renderStudents);
+  const sortBtn = document.getElementById("sort-students");
+  const sortDropdown = document.getElementById("sort-dropdown");
+
+  sortBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (sortDropdown.style.display === "block") {
+      sortDropdown.style.display = "none";
+    } else {
+      sortDropdown.style.display = "block";
+    }
+  });
+
+  const sortOptions = sortDropdown.querySelectorAll("li");
+  sortOptions.forEach(option => {
+    option.addEventListener("click", () => {
+      const sortValue = option.getAttribute("data-sort");
+      currentSort = sortValue;
+      sortBtn.textContent = "Sắp xếp theo: " + option.textContent;
+      sortDropdown.style.display = "none";
+      if (studentsData && studentsData.length > 0) {
+        renderStudents(sortStudents(studentsData, currentSort));
+      }
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!sortDropdown.contains(e.target) && e.target !== sortBtn) {
+      sortDropdown.style.display = "none";
+    }
+  });
+
+  PanelFunctions.fetchStudents((students) => {
+    renderStudents(students);
+  });
 });

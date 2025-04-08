@@ -3,51 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel</title>
+  <title>SuperUser Panel</title>
   <link rel="stylesheet" href="css/admin_panel.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1 id="greeting">Chào mừng, Admin</h1>
+      <h1 id="greeting">Chào mừng, Administrator</h1>
     </header>
-
-    <div class="search-bar">
-      <label for="search-input"></label><input type="text" id="search-input" placeholder="Tìm kiếm học sinh...">
-      <button id="search-button">Tìm kiếm</button>
+    <div class="tabview">
+      <div class="tabs">
+        <button class="tablink active" data-tab="students">Quản lý Học sinh</button>
+      </div>
+      <div id="students" class="tabcontent active">
+        <div class="search-bar">
+          <label for="search-input"></label>
+          <input type="text" id="search-input" placeholder="Tìm kiếm học sinh...">
+          <button id="search-button">Tìm kiếm</button>
+        </div>
+        <div class="controls">
+          <button id="add-student">Thêm học sinh</button>
+          <button id="edit-student">Chỉnh sửa học sinh</button>
+          <button id="delete-student">Xoá học sinh</button>
+          <button id="batch-add">Thêm hàng loạt</button>
+          <button id="set-cutoff">Đặt thời hạn điểm danh</button>
+          <button id="export-students">Xuất danh sách</button>
+          <div class="sort-wrapper">
+            <button id="sort-students" class="btn-sort">Sắp xếp theo</button>
+            <div id="sort-dropdown" class="sort-dropdown">
+              <ul>
+                <li data-sort="az">A-Z</li>
+                <li data-sort="za">Z-A</li>
+                <li data-sort="uid">UID</li>
+                <li data-sort="gender">Giới Tính</li>
+                <li data-sort="birthday">Ngày Sinh</li>
+                <li data-sort="attendance">Điểm Danh</li>
+                <li data-sort="time">Thời Gian</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="students-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>UID</th>
+                <th>Họ Và Tên</th>
+                <th>Lớp</th>
+                <th>Giới Tính</th>
+                <th>Ngày Sinh</th>
+                <th>Trạng Thái Điểm Danh</th>
+                <th>Thời Gian Điểm Danh</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+          <div id="no-data" class="no-data">Không có dữ liệu :(</div>
+        </div>
+      </div>
     </div>
-
-    <div class="controls">
-      <button id="add-student">Thêm học sinh</button>
-      <button id="delete-student">Xoá học sinh</button>
-      <button id="edit-student">Chỉnh sửa học sinh</button>
-      <button id="batch-add">Thêm hàng loạt</button>
-      <button id="set-cutoff">Đặt thời hạn điểm danh</button>
-    </div>
-
-    <div class="table-container">
-      <table id="students-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Họ và tên</th>
-            <th>Lớp</th>
-            <th>Trạng thái điểm danh</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Render by JavaScript -->
-        </tbody>
-      </table>
-      <div id="no-data" class="no-data">Không có dữ liệu</div>
-    </div>
-
     <div class="bottom-controls">
-      <button id="export">Xuất dữ liệu</button>
       <button id="logout">Đăng xuất</button>
       <button id="quit">Thoát</button>
     </div>
   </div>
-  <script src="js/admin_panel.js?v2"></script>
+  <div id="add-student-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Thêm Học sinh</div>
+      <label for="add-image">Chọn ảnh học sinh:</label>
+      <input type="file" id="add-image" accept="image/*">
+      <label for="add-HoVaTen">Họ Và Tên:</label>
+      <input type="text" id="add-HoVaTen" placeholder="Nhập họ và tên">
+      <label for="add-Lop">Lớp:</label>
+      <input type="text" id="add-Lop" placeholder="Nhập lớp">
+      <label for="add-Gender">Giới Tính:</label>
+      <input type="text" id="add-Gender" placeholder="Nhập giới tính">
+      <label for="add-NgaySinh">Ngày Sinh:</label>
+      <input type="date" id="add-NgaySinh">
+      <div class="modal-buttons">
+        <button id="save-add-student" class="btn-save">Lưu</button>
+        <button id="cancel-add-student" class="btn-cancel">Huỷ</button>
+      </div>
+    </div>
+  </div>
+  <div id="edit-student-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Chỉnh Sửa Học sinh</div>
+      <label for="edit-image">Chọn ảnh học sinh (nếu muốn đổi):</label>
+      <input type="file" id="edit-image" accept="image/*">
+      <div id="edit-image-preview-container" style="margin-top: 10px;">
+        <img id="edit-image-preview" src="" alt="Ảnh học sinh" style="max-width: 150px; display: none;">
+      </div>
+      <label for="edit-HoVaTen">Họ Và Tên:</label>
+      <input type="text" id="edit-HoVaTen" placeholder="Nhập họ và tên">
+      <label for="edit-Lop">Lớp:</label>
+      <input type="text" id="edit-Lop" placeholder="Nhập lớp">
+      <label for="edit-Gender">Giới Tính:</label>
+      <input type="text" id="edit-Gender" placeholder="Nhập giới tính">
+      <label for="edit-NgaySinh">Ngày Sinh:</label>
+      <input type="date" id="edit-NgaySinh">
+      <input type="hidden" id="edit-ImagePath">
+      <div class="modal-buttons">
+        <button id="save-edit-student" class="btn-save">Lưu</button>
+        <button id="cancel-edit-student" class="btn-cancel">Huỷ</button>
+      </div>
+    </div>
+  </div>
+  <div id="batch-add-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Thêm Hàng Loạt Học Sinh</div>
+      <label for="batch-folder-input">Chọn thư mục chứa ảnh học sinh:</label>
+      <div class="folder-select">
+        <input type="file" id="batch-folder-input" webkitdirectory directory style="display: none;">
+        <button id="select-folder">Chọn thư mục</button>
+      </div>
+      <div id="batch-student-count" class="info">
+        Số lượng học sinh: <span>0</span>
+      </div>
+      <div class="reminder" style="margin-top: 10px;">
+        <span style="font-size: 24px;">⚠️</span>
+        <span style="margin-left: 5px;">Lưu ý: Bạn phải chỉnh sửa thủ công qua nút <strong>Chỉnh sửa học sinh</strong>.</span>
+      </div>
+      <div class="modal-buttons" style="margin-top: 20px;">
+        <button id="save-batch-add" class="btn-save">Lưu</button>
+        <button id="cancel-batch-add" class="btn-cancel">Huỷ</button>
+      </div>
+    </div>
+  </div>
+  <div id="set-cutoff-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Đặt Thời Hạn Điểm Danh</div>
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label for="cutoff-gmt">Chọn múi giờ GMT:</label>
+        <input type="text" id="cutoff-gmt" placeholder="Ví dụ: GMT+7">
+      </div>
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label for="cutoff-time">Thời gian điểm danh (HH:MM):</label>
+        <input type="time" id="cutoff-time" placeholder="HH:MM">
+      </div>
+      <div class="modal-buttons" style="margin-top: 20px;">
+        <button id="save-cutoff" class="btn-save">Lưu</button>
+        <button id="cancel-cutoff" class="btn-cancel">Huỷ</button>
+      </div>
+    </div>
+  </div>
+  <div id="notification-container"></div>
+  <script src="js/superuser_panel.js?v2"></script>
 </body>
 </html>

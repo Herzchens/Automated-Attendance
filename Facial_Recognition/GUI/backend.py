@@ -104,9 +104,6 @@ def switch_app():
         return jsonify(success=True, redirect='/')
     except Exception as e:
         return jsonify(success=False, message=str(e))
-
-# ==================== Endpoint cho Học sinh ====================
-
 @app.route('/api/add_student', methods=['POST'])
 def api_add_student():
     data = request.get_json()
@@ -266,7 +263,6 @@ def api_get_students():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
-# ==================== Endpoint Tìm kiếm Học sinh ====================
 @app.route('/api/search_student', methods=['GET'])
 def api_search_student():
     query = request.args.get('query', '').strip()
@@ -278,10 +274,8 @@ def api_search_student():
         return jsonify(success=False, message="Không thể kết nối CSDL"), 500
 
     try:
-        # Lấy tất cả học sinh qua phương thức get_students_for_ui
         all_students = get_students_for_ui(cursor)
         filtered = []
-        # s: (UID, HoVaTen, Lop, Gender, NgaySinh, DiemDanhStatus, ThoiGianDiemDanh)
         for s in all_students:
             if s[1].lower().startswith(query.lower()):
                 filtered.append({
@@ -296,8 +290,6 @@ def api_search_student():
         return jsonify(success=True, students=filtered)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
-
-# ==================== Endpoint cho Tài khoản ====================
 
 @app.route('/api/add_user', methods=['POST'])
 def api_add_user():
@@ -355,7 +347,6 @@ def api_delete_user():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
-# ==================== Endpoint Render Danh sách User ====================
 @app.route('/api/users', methods=['GET'])
 def api_get_users():
     cnx, cursor = get_db_connection()
@@ -374,7 +365,6 @@ def api_get_users():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
-# ==================== Endpoint Xuất danh sách học sinh dưới dạng Excel ====================
 @app.route('/api/export_students_excel', methods=['GET'])
 def api_export_students_excel():
     cnx, cursor = get_db_connection()
@@ -399,7 +389,6 @@ def api_export_students_excel():
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 
-# ==================== Endpoint Calculate Attendance Status ====================
 @app.route('/api/calculate_attendance_status', methods=['GET'])
 def api_calculate_attendance_status():
     cnx, cursor = get_db_connection()

@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
-import sys, datetime
+import datetime
 from translator import translations
 from control_panel.components import CustomTable
 from DatabaseHooking import export_students_list, calculate_attendance_status

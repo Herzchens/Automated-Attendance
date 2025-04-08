@@ -8,25 +8,15 @@ import face_recognition
 import numpy as np
 import os
 import json
-
-# Đọc cấu hình từ file config.json
 with open("config.json", "r", encoding="utf-8") as f:
     config = json.load(f)
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 print("Sử dụng thiết bị:", device)
-
-# ==================================
-# Các biến bật/tắt (có thể cập nhật từ GUI)
-# ==================================
 enable_stabilization = config.get("enable_stabilization", True)
 enable_clahe = config.get("enable_clahe", True)
 enable_sharpening = config.get("enable_sharpening", True)
 enable_denoising = config.get("enable_denoising", True)
-
-# ==================================
-# Các hàm xử lý ảnh
-# ==================================
 def apply_clahe(image):
     if not enable_clahe:
         return image
@@ -77,10 +67,6 @@ def stabilize_frame(prev_gray, curr_gray, curr_frame):
         return curr_frame
     stabilized = cv2.warpAffine(curr_frame, m, (curr_frame.shape[1], curr_frame.shape[0]))
     return stabilized
-
-# ==================================
-# Code huấn luyện KNN (nếu cần)
-# ==================================
 def train_from_db(cursor, model_save_path=None, n_neighbors=None, knn_algo='ball_tree', verbose=False):
     X = []
     y = []
@@ -117,10 +103,6 @@ def train_from_db(cursor, model_save_path=None, n_neighbors=None, knn_algo='ball
         with open(model_save_path, 'wb') as f:
             pickle.dump(knn_clf, f)
     return knn_clf
-
-# ==================================
-# Hàm predict nhận diện khuôn mặt
-# ==================================
 def predict(X_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
     if knn_clf is None and model_path is None:
         raise Exception("Phải cung cấp knn classifier qua knn_clf hoặc model_path")
@@ -151,10 +133,6 @@ def show_prediction_labels_on_image(frame, predictions):
     del draw
     opencvimage = np.array(pil_image)
     return opencvimage
-
-# ==================================
-# Hàm main chạy vòng lặp điểm danh với multi-frame verification & decay
-# ==================================
 def main(cnx, cursor, camera_source):
     cap = cv2.VideoCapture(camera_source)
     if not cap.isOpened():
