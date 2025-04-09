@@ -1,6 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
   let studentsData = [];
   let currentSort = "az";
+
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "block";
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
   function sortStudents(array, sortParam) {
     let sorted = [...array];
     switch (sortParam) {
@@ -30,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return sorted;
   }
+
   const tablinks = document.querySelectorAll('.tablink');
   const tabcontents = document.querySelectorAll('.tabcontent');
   tablinks.forEach(btn => {
@@ -41,8 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(tabId).classList.add('active');
     });
   });
+
   let selectedStudent = null;
   let selectedUser = null;
+
   function renderStudents(students) {
     const tbody = document.querySelector("#students-table tbody");
     tbody.innerHTML = "";
@@ -66,33 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelectorAll("#students-table tbody tr").forEach(row => row.classList.remove("selected-row"));
           tr.classList.add("selected-row");
           selectedStudent = student;
-        });
-        tbody.appendChild(tr);
-      });
-    }
-  }
-  function renderUsers(users) {
-    const tbody = document.querySelector("#users-table tbody");
-    tbody.innerHTML = "";
-    selectedUser = null;
-    document.getElementById("user-detail").style.display = "none";
-    if (!users || users.length === 0) {
-      document.getElementById("no-users").style.display = "block";
-    } else {
-      document.getElementById("no-users").style.display = "none";
-      users.forEach((user, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${user.username}</td>
-          <td>${user.role}</td>`;
-        tr.addEventListener("click", () => {
-          document.querySelectorAll("#users-table tbody tr").forEach(row => row.classList.remove("selected-row"));
-          tr.classList.add("selected-row");
-          selectedUser = user;
-          document.getElementById("detail-username").textContent = "Tên: " + user.username;
-          document.getElementById("detail-role").textContent = "Quyền: " + user.role;
-          document.getElementById("user-detail").style.display = "block";
         });
         tbody.appendChild(tr);
       });
@@ -142,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('edit-Gender').value = student.Gender;
             document.getElementById('edit-NgaySinh').value = student.NgaySinh;
             document.getElementById('edit-ImagePath').value = student.ImagePath;
-
             let preview = document.getElementById('edit-image-preview');
             if (student.ImagePath) {
               preview.src = student.ImagePath;
@@ -150,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
               preview.style.display = "none";
             }
-
             showNotification("success", "Chỉnh sửa học sinh thành công!");
             callback();
           } else {
@@ -219,10 +208,66 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => showNotification("error", "Lỗi khi xuất danh sách: " + err));
     },
+    addUser: function(username, password, role, callback) {
+      fetch('/api/add_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification("success", "Thêm người dùng thành công!");
+            callback();
+          } else showNotification("error", "Lỗi khi thêm tài khoản: " + data.message);
+        })
+        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
+    },
+    editUser: function(userId, username, password, role, callback) {
+      fetch('/api/edit_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, username, password, role })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification("success", "Chỉnh sửa người dùng thành công!");
+            callback();
+          } else showNotification("error", "Lỗi khi chỉnh sửa tài khoản: " + data.message);
+        })
+        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
+    },
+    deleteUser: function(userId, callback) {
+      fetch('/api/delete_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification("success", "Xoá người dùng thành công!");
+            callback();
+          } else showNotification("error", "Lỗi khi xoá tài khoản: " + data.message);
+        })
+        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
+    },
+    fetchUsers: function(callback) {
+      fetch('/api/users')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) callback(data.users);
+          else showNotification("error", "Lỗi khi lấy danh sách người dùng: " + data.message);
+        })
+        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
+    }
   };
+
   document.getElementById("export-students").addEventListener("click", () => {
     PanelFunctions.exportStudents();
   });
+
   document.getElementById("search-button").addEventListener("click", () => {
     const query = document.getElementById("search-input").value.trim();
     if (query) {
@@ -243,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
   const folderInput = document.getElementById("batch-folder-input");
   document.getElementById("batch-add").addEventListener("click", () => {
     document.getElementById("batch-student-count").querySelector("span").textContent = "0";
@@ -272,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById("cancel-batch-add").addEventListener("click", () => closeModal("batch-add-modal"));
+
   document.getElementById("set-cutoff").addEventListener("click", () => {
     document.getElementById("cutoff-gmt").value = "";
     document.getElementById("cutoff-time").value = "";
@@ -290,6 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById("cancel-cutoff").addEventListener("click", () => closeModal("set-cutoff-modal"));
+
   document.getElementById("add-student").addEventListener("click", () => {
     document.getElementById("add-image").value = "";
     document.getElementById("add-HoVaTen").value = "";
@@ -322,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById("cancel-add-student").addEventListener("click", () => closeModal("add-student-modal"));
+
   document.getElementById("edit-student").addEventListener("click", () => {
     if (!selectedStudent) {
       alert("Vui lòng chọn học sinh cần chỉnh sửa.");
@@ -359,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById("cancel-edit-student").addEventListener("click", () => closeModal("edit-student-modal"));
+
   document.getElementById("delete-student").addEventListener("click", () => {
     if (!selectedStudent) {
       alert("Vui lòng chọn học sinh cần xoá.");
@@ -372,78 +422,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-  function fetchUsers() {
-    PanelFunctions.fetchUsers(renderUsers);
-  }
-  fetchUsers();
-  document.getElementById("add-user-btn").addEventListener("click", () => {
-    document.getElementById("add-username").value = "";
-    document.getElementById("add-password").value = "";
-    document.getElementById("add-role").value = "user";
-    openModal("add-user-modal");
-  });
-  document.getElementById("save-add-user").addEventListener("click", () => {
-    const username = document.getElementById("add-username").value;
-    const password = document.getElementById("add-password").value;
-    const role = document.getElementById("add-role").value;
-    if (username && password && role) {
-      PanelFunctions.addUser(username, password, role, () => {
-        fetchUsers();
-        closeModal("add-user-modal");
-      });
-    } else {
-      alert("Vui lòng nhập đầy đủ thông tin.");
-    }
-  });
-  document.getElementById("cancel-add-user").addEventListener("click", () => closeModal("add-user-modal"));
-  document.getElementById("edit-user-btn").addEventListener("click", () => {
-    if (!selectedUser) {
-      alert("Vui lòng chọn người dùng cần chỉnh sửa.");
-      return;
-    }
-    document.getElementById("edit-username").value = selectedUser.username;
-    document.getElementById("edit-password").value = "";
-    document.getElementById("edit-role").value = selectedUser.role;
-    openModal("edit-user-modal");
-  });
-  document.getElementById("save-edit-user").addEventListener("click", () => {
-    if (!selectedUser) return;
-    const username = document.getElementById("edit-username").value;
-    const password = document.getElementById("edit-password").value;
-    const role = document.getElementById("edit-role").value;
-    if (username && password && role) {
-      PanelFunctions.editUser(selectedUser.id, username, password, role, () => {
-        fetchUsers();
-        closeModal("edit-user-modal");
-      });
-    } else {
-      alert("Vui lòng nhập đầy đủ thông tin.");
-    }
-  });
-  document.getElementById("cancel-edit-user").addEventListener("click", () => closeModal("edit-user-modal"));
 
-  document.getElementById("delete-user-btn").addEventListener("click", () => {
-    if (!selectedUser) {
-      alert("Vui lòng chọn người dùng cần xoá.");
-      return;
-    }
-    document.getElementById("delete-username-display").textContent = selectedUser.username;
-    openModal("delete-user-modal");
-  });
-  document.getElementById("confirm-delete-user").addEventListener("click", () => {
-    if (!selectedUser) return;
-    PanelFunctions.deleteUser(selectedUser.id, () => {
-      fetchUsers();
-      closeModal("delete-user-modal");
-    });
-  });
-  document.getElementById("cancel-delete-user").addEventListener("click", () => closeModal("delete-user-modal"));
   document.getElementById("logout").addEventListener("click", () => window.location.href = "/");
   document.getElementById("quit").addEventListener("click", () => {
     if (confirm("Bạn có chắc muốn thoát?")) window.close();
   });
+
   const sortBtn = document.getElementById("sort-students");
   const sortDropdown = document.getElementById("sort-dropdown");
+
   sortBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     if (sortDropdown.style.display === "block") {
@@ -452,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sortDropdown.style.display = "block";
     }
   });
+
   const sortOptions = sortDropdown.querySelectorAll("li");
   sortOptions.forEach(option => {
     option.addEventListener("click", () => {
@@ -464,11 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
   document.addEventListener("click", (e) => {
     if (!sortDropdown.contains(e.target) && e.target !== sortBtn) {
       sortDropdown.style.display = "none";
     }
   });
+
   PanelFunctions.fetchStudents((students) => {
     renderStudents(students);
   });

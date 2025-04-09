@@ -2,6 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let studentsData = [];
   let currentSort = "az";
 
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "block";
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
   function sortStudents(array, sortParam) {
     let sorted = [...array];
     switch (sortParam) {
