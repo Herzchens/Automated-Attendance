@@ -11,34 +11,60 @@
     <header>
       <h1 id="greeting">Chào mừng, User</h1>
     </header>
-
-    <div class="search-bar">
-      <label for="search-input"></label><input type="text" id="search-input" placeholder="Tìm kiếm học sinh...">
-      <button id="search-button">Tìm kiếm</button>
+    <div class="tabview">
+      <div class="tabs">
+        <button class="tablink active" data-tab="students">Quản lý Học sinh</button>
+      </div>
+      <div id="students" class="tabcontent active">
+        <div class="search-bar">
+          <label for="search-input"></label>
+          <input type="text" id="search-input" placeholder="Tìm kiếm học sinh...">
+          <button id="search-button">Tìm kiếm</button>
+        </div>
+        <div class="controls">
+          <button id="export-students">Xuất danh sách</button>
+          <div class="sort-wrapper">
+            <button id="sort-students" class="btn-sort">Sắp xếp theo</button>
+            <div id="sort-dropdown" class="sort-dropdown">
+              <ul>
+                <li data-sort="az">A-Z</li>
+                <li data-sort="za">Z-A</li>
+                <li data-sort="uid">UID</li>
+                <li data-sort="gender">Giới Tính</li>
+                <li data-sort="birthday">Ngày Sinh</li>
+                <li data-sort="attendance">Điểm Danh</li>
+                <li data-sort="time">Thời Gian</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="students-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>UID</th>
+                <th>Họ Và Tên</th>
+                <th>Lớp</th>
+                <th>Giới Tính</th>
+                <th>Ngày Sinh</th>
+                <th>Trạng Thái Điểm Danh</th>
+                <th>Thời Gian Điểm Danh</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+          <div id="no-data" class="no-data">Không có dữ liệu :(</div>
+        </div>
+      </div>
     </div>
-
-    <div class="table-container">
-      <table id="students-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Họ và tên</th>
-            <th>Lớp</th>
-            <th>Trạng thái điểm danh</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-      <div id="no-data" class="no-data">Không có dữ liệu</div>
-    </div>
-
     <div class="bottom-controls">
-      <button id="export">Xuất dữ liệu</button>
       <button id="logout">Đăng xuất</button>
       <button id="quit">Thoát</button>
     </div>
   </div>
-  <script src="js/superuser_panel.js?v2"></script>
+  <div id="notification-container"></div>
+  <script src="js/user_panel.js?v2"></script>
 </body>
 </html>
