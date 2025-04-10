@@ -77,7 +77,13 @@ class ImageDenoising:
     def non_local_means_denoising(image, h=10, patch_size=7, patch_distance=11):
         if len(image.shape) == 3:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        denoised = denoise_nl_means(image, h=h, patch_size=patch_size, patch_distance=patch_distance, multichannel=True)
+        denoised = denoise_nl_means(
+            image,
+            h=h,
+            patch_size=patch_size,
+            patch_distance=patch_distance,
+            channel_axis=-1
+        )
         return img_as_ubyte(denoised)
 
     @staticmethod
@@ -263,10 +269,16 @@ class EdgeEnhancement:
 
     @staticmethod
     def gradient_domain_processing(image):
-        grad = sobel(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+        if len(image.shape) == 2 or image.shape[2] != 3:
+            image_color = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        else:
+            image_color = image
+
+        gray = cv2.cvtColor(image_color, cv2.COLOR_BGR2GRAY)
+        grad = sobel(gray)
         grad = cv2.normalize(grad, None, 0, 255, cv2.NORM_MINMAX)
-        grad = cv2.cvtColor(grad.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-        return cv2.addWeighted(image, 0.8, grad, 0.2, 0)
+        grad_color = cv2.cvtColor(grad.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+        return cv2.addWeighted(image_color, 0.8, grad_color, 0.2, 0)
 
 # ====================================================
 # 8. Xử lý ảnh trong miền tần số (Frequency Domain Processing)
@@ -365,6 +377,7 @@ class DistortionCorrection:
         high_freq = cv2.subtract(image, blurred)
         high_boost = cv2.addWeighted(image, 1, high_freq, boost, 0)
         return high_boost
+
 class VideoStabilization:
     def __init__(self):
         self.prev_gray = None
