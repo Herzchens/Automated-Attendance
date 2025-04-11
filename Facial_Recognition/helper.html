@@ -61,7 +61,10 @@
       transform: translateY(20px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
-
+    .fade-in-section.visible {
+      opacity: 1;
+      transform: none;
+    }
     h2 {
       margin-bottom: 15px;
       color: #007BFF;
@@ -99,13 +102,17 @@
     <section id="gioi-thieu" class="fade-in-section">
       <h2>Giới thiệu</h2>
       <p>
-        Phần mềm nhận diện khuôn mặt được thiết kế nhằm hỗ trợ việc điểm danh và quản lý học sinh thông qua công nghệ nhận diện khuôn mặt. Hệ thống tích hợp với cơ sở dữ liệu MySQL và hỗ trợ kết nối với nhiều loại camera như webcam mặc định, camera IP LAN và camera WiFi.
+        Phần mềm nhận diện khuôn mặt này được phát triển nhằm tự động hóa việc điểm danh và quản lý học sinh dựa trên công nghệ nhận diện khuôn mặt. Dự án được xây dựng theo hướng dẫn sử dụng của 
+        <a href="https://github.com/Herzchens/Automated-Attendance" target="_blank">Automated Attendance</a>, nhằm tích hợp cơ sở dữ liệu MySQL và giao diện người dùng thân thiện, giúp tối ưu hóa quy trình điểm danh trong môi trường giáo dục.
+      </p>
+      <p>
+        Hệ thống chủ yếu sử dụng webcam mặc định để kết nối, đảm bảo tính đơn giản và hiệu quả khi triển khai.
       </p>
     </section>
     <section id="cai-dat" class="fade-in-section">
       <h2>Cài đặt & Đăng nhập CSDL</h2>
       <p>
-        <strong>Bước 1:</strong> Đảm bảo phần mềm và MySQL đã được cài đặt trên hệ thống. Khi chạy phần mềm lần đầu, nếu CSDL chưa tồn tại, phần mềm sẽ tự động tạo cơ sở dữ liệu và các bảng cần thiết.
+        <strong>Bước 1:</strong> Đảm bảo phần mềm và MySQL đã được cài đặt trên hệ thống. Khi chạy phần mềm lần đầu, nếu CSDL chưa được tạo, hệ thống sẽ tự động tạo cơ sở dữ liệu và các bảng cần thiết.
       </p>
       <p>
         <strong>Bước 2:</strong> Nhập thông tin đăng nhập MySQL gồm:
@@ -128,15 +135,7 @@
     <section id="ket-noi-camera" class="fade-in-section">
       <h2>Kết nối Camera</h2>
       <p>
-        Phần mềm hỗ trợ kết nối với nhiều loại camera:
-      </p>
-      <ul>
-        <li><strong>Webcam mặc định:</strong> Sử dụng camera tích hợp hoặc kết nối qua USB.</li>
-        <li><strong>Camera IP LAN:</strong> Nhập URL kết nối theo định dạng (ví dụ: <em>rtsp://username:password@192.168.1.100:554/stream</em>).</li>
-        <li><strong>Camera WiFi:</strong> Tương tự như camera IP LAN nhưng kết nối không dây.</li>
-      </ul>
-      <p>
-        Nếu bạn chọn <em>chế độ đơn giản</em>, hệ thống sẽ hỗ trợ tự động tạo link kết nối dựa trên các thông số như giao thức (RTSP, HTTP, …), username, password, IP và cổng của camera.
+        Hệ thống sử dụng webcam mặc định có sẵn trên máy tính để thực hiện việc nhận diện khuôn mặt. Việc kết nối được thực hiện tự động và không yêu cầu cấu hình thêm các thông số phức tạp.
       </p>
     </section>
     <section id="bang-dieu-khien" class="fade-in-section">
@@ -161,11 +160,11 @@
       </p>
       <h3>Admin</h3>
       <p>
-        Quản lý học sinh: thêm, sửa, xoá thông tin học sinh, cập nhật trạng thái điểm danh, và thiết lập thời gian hạn chót.
+        Quản lý học sinh: thêm, sửa, xoá thông tin học sinh, cập nhật trạng thái điểm danh và thiết lập thời gian hạn chót.
       </p>
       <h3>Moderator</h3>
       <p>
-        Giám sát quá trình điểm danh và xuất dữ liệu báo cáo theo lớp học.
+        Giám sát quá trình điểm danh và xuất dữ liệu báo cáo theo lớp.
       </p>
       <h3>User</h3>
       <p>
@@ -176,34 +175,30 @@
       <h2>Hướng Dẫn Sử Dụng Chi Tiết</h2>
       <h3>Bước 1: Cài đặt và đăng nhập CSDL</h3>
       <p>
-        - Khởi chạy phần mềm. Nếu cơ sở dữ liệu chưa được tạo, hệ thống sẽ tự động tạo mới CSDL và các bảng cần thiết.<br>
+        - Khởi chạy phần mềm. Nếu CSDL chưa được tạo, hệ thống sẽ tự động tạo CSDL và các bảng cần thiết.<br>
         - Nhập thông tin đăng nhập MySQL (Host, Username, Password) và nhấn nút "Đăng nhập".
       </p>
-      <h3>Bước 2: Cấu hình kết nối camera</h3>
+      <h3>Bước 2: Đăng nhập vào bảng điều khiển</h3>
       <p>
-        - Chọn loại camera bạn muốn sử dụng: Webcam mặc định, Camera IP LAN hoặc Camera WiFi.<br>
-        - Nếu sử dụng webcam mặc định, hệ thống sẽ tự động kích hoạt camera có sẵn.<br>
-        - Nếu sử dụng Camera IP LAN hoặc WiFi, nhập URL hoặc cấu hình kết nối (bao gồm thông tin username, password, IP và cổng).<br>
-        - Đối với chế độ đơn giản, nhấn nút "Tạo link" để hệ thống tự động sinh đường dẫn kết nối.
+        - Sau khi cấu hình CSDL và kết nối webcam thành công, hệ thống sẽ chuyển bạn đến giao diện bảng điều khiển.<br>
+        - Tại đây, bạn có thể thực hiện các thao tác quản lý theo vai trò của mình.
       </p>
-      <h3>Bước 3: Đăng nhập vào bảng điều khiển</h3>
+      <h3>Bước 3: Quản lý học sinh và điểm danh</h3>
       <p>
-        - Sau khi cấu hình thành công CSDL và camera, bạn sẽ được chuyển đến bảng điều khiển.<br>
-        - Giao diện bảng điều khiển cho phép bạn thực hiện các thao tác theo quyền hạn của tài khoản đang đăng nhập.
+        - Với vai trò Admin, bạn có thể thêm học sinh bằng cách chọn "Thêm học sinh" và tải ảnh học sinh từ máy tính.<br>
+        - Các thao tác sửa, xoá thông tin học sinh được thực hiện qua các nút chức năng trên danh sách.<br>
+        - Khi điểm danh, hệ thống tự động cập nhật trạng thái điểm danh (đúng giờ, muộn,…) dựa trên thời gian điểm danh và hạn chót.
       </p>
-      <h3>Bước 4: Quản lý học sinh và điểm danh</h3>
-      <p>
-        - Với vai trò Admin, bạn có thể thêm học sinh bằng cách chọn "Thêm học sinh" và chọn ảnh học sinh từ máy tính.<br>
-        - Các thao tác sửa, xoá thông tin học sinh được thực hiện qua các nút chức năng trên bảng danh sách.<br>
-        - Khi điểm danh, hệ thống sẽ tự động cập nhật trạng thái (đúng giờ, muộn, …) dựa trên thời gian điểm danh và thời gian hạn chót.
-      </p>
-      <h3>Bước 5: Xuất dữ liệu và thiết lập hạn chót</h3>
+      <h3>Bước 4: Xuất dữ liệu và thiết lập hạn chót</h3>
       <p>
         - Người quản lý có thể xuất danh sách học sinh ra file CSV để lưu trữ hoặc in báo cáo.<br>
-        - Sử dụng chức năng "Cài đặt hạn chót" để xác định thời gian giới hạn cho việc điểm danh. Học sinh điểm danh sau thời gian này sẽ được đánh dấu là "Muộn" (hoặc "Late").
+        - Sử dụng chức năng "Cài đặt hạn chót" để xác định thời gian giới hạn cho việc điểm danh. Học sinh điểm danh sau thời gian này sẽ được đánh dấu là "Muộn".
       </p>
     </section>
   </main>
+  <footer>
+    <p>&copy; 2025 Phần Mềm Nhận Diện Khuôn Mặt. Bản quyền thuộc về hệ thống.</p>
+  </footer>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const sections = document.querySelectorAll('.fade-in-section');
