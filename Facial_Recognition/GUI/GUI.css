@@ -256,3 +256,24 @@ button:hover {
 .options-row .remember label input[type="checkbox"] {
   margin-right: 5px;
 }
+
+.support-buttons {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    .support-buttons button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.3s;
+    }
+    .support-buttons button:hover {
+      background-color: #0056b3;
+    }
