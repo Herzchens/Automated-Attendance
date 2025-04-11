@@ -75,49 +75,46 @@ def train_from_db(cursor, model_save_path=None, n_neighbors=None, knn_algo='ball
             pickle.dump(knn_clf, f)
     return knn_clf
 
-toggle_items = [
-    ("Siêu phân giải (Bicubic)", "SuperResolution_bicubic_interpolation"),
-    ("Làm sắc nét (Unsharp Masking)", "ImageSharpening_unsharp_masking"),
-    ("Lọc cao tần (High-pass Filtering)", "ImageSharpening_high_pass_filtering"),
-    ("Làm sắc nét (Laplacian)", "ImageSharpening_laplacian_sharpening"),
-    ("Làm sắc nét (Gradient Based)", "ImageSharpening_gradient_based_sharpening"),
-    ("Khử mờ Wiener", "ImageSharpening_wiener_deconvolution"),
-    ("Lọc nhiễu Gaussian", "ImageDenoising_gaussian_filtering"),
-    ("Lọc nhiễu Median", "ImageDenoising_median_filtering"),
-    ("Lọc nhiễu Bilateral", "ImageDenoising_bilateral_filtering"),
-    ("Lọc nhiễu Non-local", "ImageDenoising_non_local_means_denoising"),
-    ("Lọc nhiễu Wavelet", "ImageDenoising_wavelet_denoising"),
-    ("Lọc nhiễu Diffusion", "ImageDenoising_anisotropic_diffusion"),
-    ("Chỉnh sửa Gamma", "ColorBrightnessAdjustment_gamma_correction"),
-    ("Cân bằng Histogram", "ColorBrightnessAdjustment_histogram_equalization"),
-    ("Histogram thích ứng", "ColorBrightnessAdjustment_adaptive_histogram_equalization"),
-    ("Retinex", "ColorBrightnessAdjustment_retinex_algorithm"),
-    ("Chỉnh sửa trắng cân", "ColorBrightnessAdjustment_white_balance_correction"),
-    ("Thay đổi kích thước", "GeometricEnhancements_scaling_resampling"),
-    ("Xoay", "GeometricEnhancements_rotation"),
-    ("Biến đổi phối cảnh", "GeometricEnhancements_perspective_transformation"),
-    ("Toán tử hình học", "GeometricEnhancements_morphological_operations"),
-    ("Làm mờ Gaussian", "ControlledBlurring_gaussian_blur"),
-    ("Mô phỏng mờ chuyển động", "ControlledBlurring_motion_blur_simulation"),
-    ("Mờ zoom tròn", "ControlledBlurring_radial_zoom_blur"),
-    ("Mờ bề mặt", "ControlledBlurring_surface_blur"),
-    ("Phát hiện cạnh", "EdgeEnhancement_edge_detection"),
-    ("Xử lý gradient", "EdgeEnhancement_gradient_domain_processing"),
-    ("Biến đổi Fourier", "FrequencyDomainProcessing_fourier_transform_processing"),
-    ("Lọc cao/thấp", "FrequencyDomainProcessing_high_low_pass_filtering"),
-    ("Biến đổi Wavelet", "FrequencyDomainProcessing_wavelet_transform"),
-    ("Log Transformation", "FaceRecognitionEnhancement_log_transformation"),
-    ("Power Law Transformation", "FaceRecognitionEnhancement_power_law_transformation"),
-    ("Contrast Stretching", "FaceRecognitionEnhancement_contrast_stretching"),
-    ("Chuyển đổi màu", "FaceRecognitionEnhancement_color_space_conversion"),
-    ("Lọc cạnh tinh tế", "FaceRecognitionEnhancement_edge_aware_filtering"),
-    ("High Boost Filtering", "DistortionCorrection_high_boost_filtering"),
-    ("Ổn định video", "VideoStabilization")
-]
-
-toggles = {}
-for disp, key in toggle_items:
-    toggles[key] = config.get(key, False)
+# Khởi tạo các toggle từ config
+toggles = {
+    "SuperResolution_bicubic_interpolation": config.get("SuperResolution_bicubic_interpolation", False),
+    "ImageSharpening_unsharp_masking": config.get("ImageSharpening_unsharp_masking", False),
+    "ImageSharpening_high_pass_filtering": config.get("ImageSharpening_high_pass_filtering", False),
+    "ImageSharpening_laplacian_sharpening": config.get("ImageSharpening_laplacian_sharpening", False),
+    "ImageSharpening_gradient_based_sharpening": config.get("ImageSharpening_gradient_based_sharpening", False),
+    "ImageSharpening_wiener_deconvolution": config.get("ImageSharpening_wiener_deconvolution", False),
+    "ImageDenoising_gaussian_filtering": config.get("ImageDenoising_gaussian_filtering", False),
+    "ImageDenoising_median_filtering": config.get("ImageDenoising_median_filtering", False),
+    "ImageDenoising_bilateral_filtering": config.get("ImageDenoising_bilateral_filtering", False),
+    "ImageDenoising_non_local_means_denoising": config.get("ImageDenoising_non_local_means_denoising", False),
+    "ImageDenoising_wavelet_denoising": config.get("ImageDenoising_wavelet_denoising", False),
+    "ImageDenoising_anisotropic_diffusion": config.get("ImageDenoising_anisotropic_diffusion", False),
+    "ColorBrightnessAdjustment_gamma_correction": config.get("ColorBrightnessAdjustment_gamma_correction", False),
+    "ColorBrightnessAdjustment_histogram_equalization": config.get("ColorBrightnessAdjustment_histogram_equalization", False),
+    "ColorBrightnessAdjustment_adaptive_histogram_equalization": config.get("ColorBrightnessAdjustment_adaptive_histogram_equalization", False),
+    "ColorBrightnessAdjustment_retinex_algorithm": config.get("ColorBrightnessAdjustment_retinex_algorithm", False),
+    "ColorBrightnessAdjustment_white_balance_correction": config.get("ColorBrightnessAdjustment_white_balance_correction", False),
+    "GeometricEnhancements_scaling_resampling": config.get("GeometricEnhancements_scaling_resampling", False),
+    "GeometricEnhancements_rotation": config.get("GeometricEnhancements_rotation", False),
+    "GeometricEnhancements_perspective_transformation": config.get("GeometricEnhancements_perspective_transformation", False),
+    "GeometricEnhancements_morphological_operations": config.get("GeometricEnhancements_morphological_operations", False),
+    "ControlledBlurring_gaussian_blur": config.get("ControlledBlurring_gaussian_blur", False),
+    "ControlledBlurring_motion_blur_simulation": config.get("ControlledBlurring_motion_blur_simulation", False),
+    "ControlledBlurring_radial_zoom_blur": config.get("ControlledBlurring_radial_zoom_blur", False),
+    "ControlledBlurring_surface_blur": config.get("ControlledBlurring_surface_blur", False),
+    "EdgeEnhancement_edge_detection": config.get("EdgeEnhancement_edge_detection", False),
+    "EdgeEnhancement_gradient_domain_processing": config.get("EdgeEnhancement_gradient_domain_processing", False),
+    "FrequencyDomainProcessing_fourier_transform_processing": config.get("FrequencyDomainProcessing_fourier_transform_processing", False),
+    "FrequencyDomainProcessing_high_low_pass_filtering": config.get("FrequencyDomainProcessing_high_low_pass_filtering", False),
+    "FrequencyDomainProcessing_wavelet_transform": config.get("FrequencyDomainProcessing_wavelet_transform", False),
+    "FaceRecognitionEnhancement_log_transformation": config.get("FaceRecognitionEnhancement_log_transformation", False),
+    "FaceRecognitionEnhancement_power_law_transformation": config.get("FaceRecognitionEnhancement_power_law_transformation", False),
+    "FaceRecognitionEnhancement_contrast_stretching": config.get("FaceRecognitionEnhancement_contrast_stretching", False),
+    "FaceRecognitionEnhancement_color_space_conversion": config.get("FaceRecognitionEnhancement_color_space_conversion", False),
+    "FaceRecognitionEnhancement_edge_aware_filtering": config.get("FaceRecognitionEnhancement_edge_aware_filtering", False),
+    "DistortionCorrection_high_boost_filtering": config.get("DistortionCorrection_high_boost_filtering", False),
+    "VideoStabilization": config.get("VideoStabilization", False)
+}
 
 def update_config_file():
     for key in toggles:
@@ -161,30 +158,98 @@ def create_manual_config_window():
     btn_save = ctk.CTkButton(frame, text="Lưu cấu hình thủ công", command=save_manual_config)
     btn_save.pack(pady=20)
 
-control_window = None
+global_control_panel = None
+
+# Định nghĩa nhóm các nút toggle (không có ghi chú)
+toggle_groups = {
+    "Chỉnh sửa & Phục hồi": [
+        ("Siêu phân giải (Bicubic)", "SuperResolution_bicubic_interpolation"),
+        ("Làm sắc nét (Unsharp Masking)", "ImageSharpening_unsharp_masking"),
+        ("Lọc cao tần (High-pass Filtering)", "ImageSharpening_high_pass_filtering"),
+        ("Làm sắc nét (Laplacian)", "ImageSharpening_laplacian_sharpening"),
+        ("Làm sắc nét (Gradient Based)", "ImageSharpening_gradient_based_sharpening"),
+        ("Khử mờ Wiener", "ImageSharpening_wiener_deconvolution"),
+        ("Lọc nhiễu Gaussian", "ImageDenoising_gaussian_filtering"),
+        ("Lọc nhiễu Median", "ImageDenoising_median_filtering"),
+        ("Lọc nhiễu Bilateral", "ImageDenoising_bilateral_filtering"),
+        ("Lọc nhiễu Non-local", "ImageDenoising_non_local_means_denoising"),
+        ("Lọc nhiễu Wavelet", "ImageDenoising_wavelet_denoising"),
+        ("Lọc nhiễu Diffusion", "ImageDenoising_anisotropic_diffusion")
+    ],
+    "Điều chỉnh màu & sáng": [
+        ("Chỉnh sửa Gamma", "ColorBrightnessAdjustment_gamma_correction"),
+        ("Cân bằng Histogram", "ColorBrightnessAdjustment_histogram_equalization"),
+        ("Histogram thích ứng", "ColorBrightnessAdjustment_adaptive_histogram_equalization"),
+        ("Retinex", "ColorBrightnessAdjustment_retinex_algorithm"),
+        ("Chỉnh sửa trắng cân", "ColorBrightnessAdjustment_white_balance_correction")
+    ],
+    "Biến đổi hình học nhẹ": [
+        ("Thay đổi kích thước", "GeometricEnhancements_scaling_resampling"),
+        ("Xoay", "GeometricEnhancements_rotation"),
+        ("Biến đổi phối cảnh", "GeometricEnhancements_perspective_transformation"),
+        ("Toán tử hình học", "GeometricEnhancements_morphological_operations")
+    ],
+    "Hiệu ứng Blur": [
+        ("Làm mờ Gaussian", "ControlledBlurring_gaussian_blur"),
+        ("Mô phỏng mờ chuyển động", "ControlledBlurring_motion_blur_simulation"),
+        ("Mờ zoom tròn", "ControlledBlurring_radial_zoom_blur"),
+        ("Mờ bề mặt", "ControlledBlurring_surface_blur")
+    ],
+    "Biến đổi nâng cao": [
+        ("Phát hiện cạnh", "EdgeEnhancement_edge_detection"),
+        ("Xử lý gradient", "EdgeEnhancement_gradient_domain_processing")
+    ],
+    "Xử lý trong miền tần số": [
+        ("Biến đổi Fourier", "FrequencyDomainProcessing_fourier_transform_processing"),
+        ("Lọc cao/thấp", "FrequencyDomainProcessing_high_low_pass_filtering"),
+        ("Biến đổi Wavelet", "FrequencyDomainProcessing_wavelet_transform")
+    ],
+    "Tăng cường khuôn mặt": [
+        ("Log Transformation", "FaceRecognitionEnhancement_log_transformation"),
+        ("Power Law Transformation", "FaceRecognitionEnhancement_power_law_transformation"),
+        ("Contrast Stretching", "FaceRecognitionEnhancement_contrast_stretching"),
+        ("Chuyển đổi màu", "FaceRecognitionEnhancement_color_space_conversion"),
+        ("Lọc cạnh tinh tế", "FaceRecognitionEnhancement_edge_aware_filtering")
+    ],
+    "Khác": [
+        ("High Boost Filtering", "DistortionCorrection_high_boost_filtering"),
+        ("Ổn định video", "VideoStabilization")
+    ]
+}
+
 def create_control_window():
-    global control_window
+    global global_control_panel
     control_window = ctk.CTk()
     control_window.title("Control Panel")
     control_window.geometry("300x700")
-    frame = ctk.CTkFrame(control_window)
-    frame.pack(fill="both", expand=True, padx=10, pady=10)
+    main_frame = ctk.CTkFrame(control_window)
+    main_frame.pack(fill="both", expand=True, padx=10, pady=10)
     toggle_vars = {}
-    for disp, key in toggle_items:
-        var = ctk.BooleanVar(value=toggles[key])
-        toggle_vars[key] = var
-        switch = ctk.CTkSwitch(master=frame, text=disp, variable=var, command=lambda k=key, v=var: on_toggle(k, v))
-        switch.pack(pady=3, anchor="w")
-    btn_manual = ctk.CTkButton(master=frame, text="Chỉnh sửa cấu hình thủ công", command=create_manual_config_window)
+
+    # Tạo nhóm các nút mà không có ghi chú
+    for group_name, toggles_list in toggle_groups.items():
+        group_label = ctk.CTkLabel(main_frame, text=group_name, font=ctk.CTkFont(size=16, weight='bold'))
+        group_label.pack(pady=(10, 5), anchor="w")
+        for disp, key in toggles_list:
+            subframe = ctk.CTkFrame(main_frame)
+            subframe.pack(fill="x", pady=3, padx=5)
+            var = ctk.BooleanVar(value=toggles[key])
+            toggle_vars[key] = var
+            switch = ctk.CTkSwitch(master=subframe, text=disp, variable=var,
+                                   command=lambda k=key, v=var: on_toggle(k, v))
+            switch.pack(side="left")
+    btn_manual = ctk.CTkButton(master=main_frame, text="Chỉnh sửa cấu hình thủ công", command=create_manual_config_window)
     btn_manual.pack(pady=10)
-    btn_hide = ctk.CTkButton(master=frame, text="Hide Panel", command=lambda: control_window.withdraw())
+    btn_hide = ctk.CTkButton(master=main_frame, text="Hide Panel", command=lambda: control_window.withdraw())
     btn_hide.pack(pady=10)
     control_window.protocol("WM_DELETE_WINDOW", lambda: control_window.withdraw())
+    global_control_panel = control_window
     control_window.mainloop()
 
 def on_toggle(key, var):
     toggles[key] = var.get()
     update_config_file()
+
 def apply_enhancements(frame):
     if toggles["SuperResolution_bicubic_interpolation"]:
         frame = SuperResolution.bicubic_interpolation(frame)
@@ -226,8 +291,8 @@ def apply_enhancements(frame):
         frame = GeometricEnhancements.rotation(frame, angle=0)
     if toggles["GeometricEnhancements_perspective_transformation"]:
         h, w = frame.shape[:2]
-        src = [[0,0], [w,0], [w,h], [0,h]]
-        dst = [[0,0], [w,0], [w,h], [0,h]]
+        src = [[0, 0], [w, 0], [w, h], [0, h]]
+        dst = [[0, 0], [w, 0], [w, h], [0, h]]
         frame = GeometricEnhancements.perspective_transformation(frame, src, dst)
     if toggles["GeometricEnhancements_morphological_operations"]:
         frame = GeometricEnhancements.morphological_operations(frame, operation='opening')
