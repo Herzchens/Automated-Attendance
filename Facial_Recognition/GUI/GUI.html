@@ -7,10 +7,14 @@
   <link rel="stylesheet" href="GUI.css">
 </head>
 <body>
+  <div class="support-buttons">
+    <button onclick="window.location.href='helper.html'">Cần hỗ trợ?</button>
+    <button onclick="window.location.href='helper(en).html'">Need help?</button>
+  </div>
+
   <div class="wrapper">
     <form id="loginForm">
       <h2>Đăng nhập</h2>
-
       <div class="input-field">
         <input type="text" id="username" name="username" required placeholder=" ">
         <label for="username">Tên đăng nhập</label>
@@ -46,6 +50,7 @@
       </div>
     </form>
   </div>
+
   <script src="GUI.js?v2"></script>
 </body>
 </html>
