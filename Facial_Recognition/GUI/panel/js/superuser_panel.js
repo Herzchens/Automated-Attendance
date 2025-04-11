@@ -1,20 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+  function showNotification(type, message) {
+    console.log(`[${type.toUpperCase()}]: ${message}`);
+  }
+
   let studentsData = [];
   let currentSort = "az";
 
-function openModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "block";
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = "block";
+    }
   }
-}
 
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "none";
+  function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = "none";
+    }
   }
-}
+
   function sortStudents(array, sortParam) {
     let sorted = [...array];
     switch (sortParam) {
@@ -292,6 +297,7 @@ function closeModal(modalId) {
     }
   };
 
+  // Xử lý sự kiện click cho các nút chức năng
   document.getElementById("export-students").addEventListener("click", () => {
     PanelFunctions.exportStudents();
   });
@@ -376,7 +382,10 @@ function closeModal(modalId) {
   });
   document.getElementById("add-image").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if (file) autofillFromFilename(file.name, "add-HoVaTen", "add-Lop");
+    // Kiểm tra nếu hàm autofillFromFilename tồn tại, nếu không sẽ bỏ qua
+    if (file && typeof autofillFromFilename === 'function') {
+      autofillFromFilename(file.name, "add-HoVaTen", "add-Lop");
+    }
   });
   document.getElementById("save-add-student").addEventListener("click", () => {
     const fileInput = document.getElementById("add-image");
@@ -414,7 +423,10 @@ function closeModal(modalId) {
   });
   document.getElementById("edit-image").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if (file) autofillFromFilename(file.name, "edit-HoVaTen", "edit-Lop");
+    // Kiểm tra nếu hàm autofillFromFilename tồn tại
+    if (file && typeof autofillFromFilename === 'function') {
+      autofillFromFilename(file.name, "edit-HoVaTen", "edit-Lop");
+    }
   });
   document.getElementById("save-edit-student").addEventListener("click", () => {
     if (!selectedStudent) return;

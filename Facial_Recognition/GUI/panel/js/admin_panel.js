@@ -1,20 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
+  function showNotification(type, message) {
+    console.log(`[${type.toUpperCase()}]: ${message}`);
+  }
+
   let studentsData = [];
   let currentSort = "az";
 
-function openModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "block";
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = "block";
+    }
   }
-}
 
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "none";
+  function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = "none";
+    }
   }
-}
 
   function sortStudents(array, sortParam) {
     let sorted = [...array];
@@ -59,8 +63,6 @@ function closeModal(modalId) {
   });
 
   let selectedStudent = null;
-  let selectedUser = null;
-
   function renderStudents(students) {
     const tbody = document.querySelector("#students-table tbody");
     tbody.innerHTML = "";
@@ -89,6 +91,7 @@ function closeModal(modalId) {
       });
     }
   }
+
   const PanelFunctions = {
     fetchStudents: function(callback) {
       fetch('/api/students')
@@ -207,60 +210,6 @@ function closeModal(modalId) {
           a.remove();
         })
         .catch(err => showNotification("error", "Lỗi khi xuất danh sách: " + err));
-    },
-    addUser: function(username, password, role, callback) {
-      fetch('/api/add_user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role })
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showNotification("success", "Thêm người dùng thành công!");
-            callback();
-          } else showNotification("error", "Lỗi khi thêm tài khoản: " + data.message);
-        })
-        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
-    },
-    editUser: function(userId, username, password, role, callback) {
-      fetch('/api/edit_user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId, username, password, role })
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showNotification("success", "Chỉnh sửa người dùng thành công!");
-            callback();
-          } else showNotification("error", "Lỗi khi chỉnh sửa tài khoản: " + data.message);
-        })
-        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
-    },
-    deleteUser: function(userId, callback) {
-      fetch('/api/delete_user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId })
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showNotification("success", "Xoá người dùng thành công!");
-            callback();
-          } else showNotification("error", "Lỗi khi xoá tài khoản: " + data.message);
-        })
-        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
-    },
-    fetchUsers: function(callback) {
-      fetch('/api/users')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) callback(data.users);
-          else showNotification("error", "Lỗi khi lấy danh sách người dùng: " + data.message);
-        })
-        .catch(err => showNotification("error", "Lỗi kết nối: " + err));
     }
   };
 
@@ -348,7 +297,7 @@ function closeModal(modalId) {
   });
   document.getElementById("add-image").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if (file) autofillFromFilename(file.name, "add-HoVaTen", "add-Lop");
+    if (file && typeof autofillFromFilename === 'function') autofillFromFilename(file.name, "add-HoVaTen", "add-Lop");
   });
   document.getElementById("save-add-student").addEventListener("click", () => {
     const fileInput = document.getElementById("add-image");
@@ -386,7 +335,7 @@ function closeModal(modalId) {
   });
   document.getElementById("edit-image").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if (file) autofillFromFilename(file.name, "edit-HoVaTen", "edit-Lop");
+    if (file && typeof autofillFromFilename === 'function') autofillFromFilename(file.name, "edit-HoVaTen", "edit-Lop");
   });
   document.getElementById("save-edit-student").addEventListener("click", () => {
     if (!selectedStudent) return;
