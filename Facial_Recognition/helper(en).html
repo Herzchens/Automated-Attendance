@@ -61,7 +61,11 @@
       transform: translateY(20px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
-
+    /* Khi section được hiển thị (IntersectionObserver gán class "visible") */
+    .fade-in-section.visible {
+      opacity: 1;
+      transform: none;
+    }
     h2 {
       margin-bottom: 15px;
       color: #007BFF;
@@ -93,7 +97,7 @@
     <ul>
       <li><a href="#introduction">Introduction</a></li>
       <li><a href="#setup">Setup & Database Login</a></li>
-      <li><a href="#camera-connection">Camera Connection</a></li>
+      <!-- Phần cấu hình camera đã được loại bỏ -->
       <li><a href="#control-panel">Control Panel</a></li>
       <li><a href="#features">Role-Based Features</a></li>
       <li><a href="#detailed-instructions">Detailed Instructions</a></li>
@@ -103,7 +107,15 @@
     <section id="introduction" class="fade-in-section">
       <h2>Introduction</h2>
       <p>
-        This facial recognition software is designed to manage student attendance through facial recognition technology. The system integrates with a MySQL database and supports multiple camera connections including default webcams, IP LAN cameras, and Wi-Fi cameras.
+        Welcome to the Facial Recognition Software User Guide. This project, as detailed in the 
+        <a href="https://github.com/Herzchens/Automated-Attendance" target="_blank">Automated Attendance README</a>, 
+        is designed to streamline student attendance using facial recognition technology. By leveraging a robust 
+        MySQL database and employing advanced facial detection algorithms, the software enables automated, 
+        efficient, and accurate attendance tracking.
+      </p>
+      <p>
+        The system primarily uses the default webcam for camera connection, ensuring ease of setup while maintaining 
+        high reliability. Other camera types are not configured in this guide.
       </p>
     </section>
     <section id="setup" class="fade-in-section">
@@ -129,27 +141,14 @@
         <li>User: <strong>user / userpass</strong></li>
       </ul>
     </section>
-    <section id="camera-connection" class="fade-in-section">
-      <h2>Camera Connection</h2>
-      <p>
-        The software supports connecting to various camera types:
-      </p>
-      <ul>
-        <li><strong>Default Webcam:</strong> Use your built-in or USB-connected webcam.</li>
-        <li><strong>IP LAN Camera:</strong> Enter the connection URL in the format (e.g., <em>rtsp://username:password@192.168.1.100:554/stream</em>).</li>
-        <li><strong>Wi-Fi Camera:</strong> Similar to an IP LAN camera, but connects wireless.</li>
-      </ul>
-      <p>
-        In <em>Simple Mode</em>, the system will automatically generate the connection URL based on parameters such as protocol (RTSP, HTTP, etc.), username, password, IP, and port.
-      </p>
-    </section>
+    <!-- Phần cấu hình camera đã bị loại bỏ theo yêu cầu -->
     <section id="control-panel" class="fade-in-section">
       <h2>Control Panel</h2>
       <p>
-        Once you have successfully logged in to the database and connected your camera, you will be redirected to the control panel. The interface features:
+        Once you have successfully logged in to the database, you will be redirected to the control panel. The interface features:
       </p>
       <ul>
-        <li>Smooth animations and rounded buttons/inputs.</li>
+        <li>Smooth animations and modern rounded inputs/buttons.</li>
         <li>An option to switch between Dark and Light modes.</li>
         <li>Logout and exit functionalities.</li>
       </ul>
@@ -183,25 +182,18 @@
         - Launch the software. If the database is not yet created, the system will automatically set it up.<br>
         - Enter your MySQL login credentials (Host, Username, Password) and click "Login".
       </p>
-      <h3>Step 2: Configure Camera Connection</h3>
+      <h3>Step 2: Access the Control Panel</h3>
       <p>
-        - Choose the type of camera: Default Webcam, IP LAN Camera, or Wi-Fi Camera.<br>
-        - For Default Webcam, the system will auto-detect the built-in camera.<br>
-        - For IP LAN or WiFi cameras, enter the connection URL or configure the connection settings (username, password, IP, and port).<br>
-        - In Simple Mode, click the "Generate Link" button for an automatic connection URL.
+        - Once the database configuration is complete, you will be directed to the control panel.<br>
+        - Use the features according to your assigned role.
       </p>
-      <h3>Step 3: Access the Control Panel</h3>
-      <p>
-        - Once the database and camera configurations are successful, you will be directed to the control panel.<br>
-        - The control panel interface allows you to perform actions based on your assigned user role.
-      </p>
-      <h3>Step 4: Manage Students and Attendance</h3>
+      <h3>Step 3: Manage Students and Attendance</h3>
       <p>
         - As an Admin, add students by clicking "Add Student" and selecting the student's image from your computer.<br>
         - Edit or delete student records using the corresponding buttons on the list.<br>
         - When taking attendance, the system automatically updates the status (on time, late, etc.) based on the cutoff time.
       </p>
-      <h3>Step 5: Export Data and Set Cutoff Time</h3>
+      <h3>Step 4: Export Data and Set Cutoff Time</h3>
       <p>
         - Managers can export the student list as a CSV file for record keeping or reporting.<br>
         - Use the "Set Cutoff Time" feature to define a deadline for attendance. Students checking in after the cutoff will be flagged as "Late".
