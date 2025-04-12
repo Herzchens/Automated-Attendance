@@ -220,15 +220,15 @@ def create_control_window():
     control_window = ctk.CTk()
     control_window.title("Control Panel")
     control_window.geometry("300x700")
-    main_frame = ctk.CTkFrame(control_window)
-    main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    scrollable_frame = ctk.CTkScrollableFrame(control_window, width=280, height=680)
+    scrollable_frame.pack(padx=10, pady=10, fill="both", expand=True)
     toggle_vars = {}
 
     for group_name, toggles_list in toggle_groups.items():
-        group_label = ctk.CTkLabel(main_frame, text=group_name, font=ctk.CTkFont(size=16, weight='bold'))
+        group_label = ctk.CTkLabel(scrollable_frame, text=group_name, font=ctk.CTkFont(size=16, weight='bold'))
         group_label.pack(pady=(10, 5), anchor="w")
         for disp, key, note in toggles_list:
-            subframe = ctk.CTkFrame(main_frame)
+            subframe = ctk.CTkFrame(scrollable_frame)
             subframe.pack(fill="x", pady=3, padx=5)
             var = ctk.BooleanVar(value=toggles[key])
             toggle_vars[key] = var
@@ -237,9 +237,9 @@ def create_control_window():
             switch.pack(side="left")
             note_label = ctk.CTkLabel(subframe, text=note, fg_color="transparent", text_color="gray")
             note_label.pack(side="left", padx=10)
-    btn_manual = ctk.CTkButton(master=main_frame, text="Chỉnh sửa cấu hình thủ công", command=create_manual_config_window)
+    btn_manual = ctk.CTkButton(master=scrollable_frame, text="Chỉnh sửa cấu hình thủ công", command=create_manual_config_window)
     btn_manual.pack(pady=10)
-    btn_hide = ctk.CTkButton(master=main_frame, text="Hide Panel", command=lambda: control_window.withdraw())
+    btn_hide = ctk.CTkButton(master=scrollable_frame, text="Hide Panel", command=lambda: control_window.withdraw())
     btn_hide.pack(pady=10)
     control_window.protocol("WM_DELETE_WINDOW", lambda: control_window.withdraw())
     global_control_panel = control_window
